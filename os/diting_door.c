@@ -17,7 +17,10 @@
 #include <linux/version.h>
 #include <linux/namei.h>
 
+#include "diting_util.h"
 #include "diting_door.h"
+#include "diting_bprm.h"
+#include "diting_access.h"
 
 /* old hook function point */
 static int (* old_bprm_check_security)(struct linux_binprm *bprm);
@@ -39,86 +42,52 @@ static int (* old_inode_rmdir)(struct inode *dir, struct dentry *dentry);
 
 static int diting_module_inside_inode_rmdir(struct inode *dir, struct dentry *dentry)
 {
-	int ret = 0;
+	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_RMDIR);
 
-	if(diting_dentry_has_permission(current, dentry, DITING_MAY_DELETE, DITING_ENUM_FS_INODE_RMDIR))
-		ret = -1;
-
-	return ret;
+	return 0;
 }
 
 static int diting_module_inside_inode_mkdir(struct inode *inode, struct dentry *dentry, int mask)
 {
-	int ret = 0;
+	diting_dentry_has_permission(current, dentry, NULL, mask, DITING_PROCACCESS_INODE_MKDIR);
 
-	if(diting_dentry_has_permission(current, dentry, DITING_MAY_WRITE, DITING_ENUM_FS_INODE_MKDIR))
-		ret = -1;
-
-	return ret;
+	return 0;
 }
 
 static int diting_module_inside_inode_rename(struct inode *old_inode, struct dentry *old_dentry, 
 		struct inode * new_inode, struct dentry *new_dentry)
 {
-	int ret = 0;
+	diting_dentry_has_permission(current, new_dentry, old_dentry, 0, DITING_PROCACCESS_INODE_RENAME);
 
-	if(diting_dentry_has_permission(current, new_dentry, DITING_MAY_RENAME, DITING_ENUM_FS_INODE_RENAME) ||
-			diting_dentry_has_permission(current, old_dentry, DITING_MAY_RENAME, DITING_ENUM_FS_INODE_RENAME))
-		ret = -1;
-
-	if (!new_inode)
-		goto out;
-
-out:
-	return ret;
+	return 0;
 }
 
 static int diting_module_inside_inode_symlink(struct inode *dir, struct dentry *dentry, const char *old_name)
 {
-	int ret = 0;
-	if(diting_dentry_has_permission(current, dentry, DITING_MAY_WRITE, DITING_ENUM_FS_INODE_SYMLINK))
-		ret = -1;
+	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_SYMLINK);
 
-	return ret;
+	return 0;
 }
 
 static int diting_module_inside_inode_link(struct dentry *old_dentry, struct inode *dir, struct dentry *new_dentry)
 {
-	int ret = 0;
-	if(diting_dentry_has_permission(current, new_dentry, DITING_MAY_WRITE, DITING_ENUM_FS_INODE_LINK))
-		if(diting_dentry_has_permission(current, old_dentry, DITING_MAY_WRITE, DITING_ENUM_FS_INODE_LINK))
-			ret = -1;
+	diting_dentry_has_permission(current, new_dentry, old_dentry, 0, DITING_PROCACCESS_INODE_LINK);
 
-	return ret;
+	return 0;
 }
 
 static int diting_module_inside_inode_unlink(struct inode *dir, struct dentry *dentry)
 {
-	int ret = 0;
+	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_UNLINK);
 
-	if(diting_dentry_has_permission(current, dentry, DITING_MAY_DELETE, DITING_ENUM_FS_INODE_UNLINK))
-		ret = -1;
-
-	return ret;
+	return 0;
 }
 
 static int diting_module_inside_inode_create(struct inode *dir, struct dentry *dentry, int mode)
 {
-	int ret = 0;
-	ret = diting_dentry_has_permission(current, dentry, DITING_MAY_WRITE, DITING_ENUM_FS_INODE_CREATE);
-	if(ret == 1)
-	{
-		ret = 0;
-		goto out;
-	}
-	else if(ret)
-	{
-		ret = -1;	
-		goto out;
-	}
-	
-out:
-	return ret;
+	diting_dentry_has_permission(current, dentry, NULL, mode, DITING_PROCACCESS_INODE_CREATE);
+
+	return 0;
 }
 
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 18)
@@ -127,13 +96,9 @@ static int diting_module_inside_inode_permission(struct inode *inode, int mask, 
 static int diting_module_inside_inode_permission(struct inode *inode, int mask)
 #endif
 {
-	int ret = 0;
 	struct dentry *dentry = NULL;
 
-	if(!inode || IS_ERR(inode))
-		goto out;
-
-	if ((!S_ISREG(inode->i_mode)) && ((mask == DITING_MAY_EXEC) || (mask == DITING_MAY_READ)))
+	if(!inode || IS_ERR(inode) || !S_ISREG(inode->i_mode))
 		goto out;
 
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 18)
@@ -148,28 +113,24 @@ static int diting_module_inside_inode_permission(struct inode *inode, int mask)
 	if(!dentry || IS_ERR(dentry))
 		goto out;
 
-	if(diting_dentry_has_permission(current, dentry, mask, DITING_ENUM_FS_INODE_PERMISSION))
-		ret = -1;
+	diting_dentry_has_permission(current, dentry, NULL, mask, DITING_PROCACCESS_INODE_ACCESS);
 
 out:
 	if(dentry)
 		dput(dentry);
 
-	return ret;
+	return 0;
 }
 
 static int diting_module_inside_file_permission(struct file *file, int mask)
 {
-	int ret = 0;
-
 	if(!file->f_dentry || IS_ERR(file->f_dentry))
 		goto out;
 
-	if(diting_dentry_has_permission(current, file->f_dentry, mask, DITING_ENUM_FS_FILE_PERMISSION))
-		ret = -1;
+	diting_dentry_has_permission(current, file->f_dentry, NULL, mask, DITING_PROCACCESS_FILE_ACCESS);
 
 out:
-	return ret;
+	return 0;
 }
 
 static int diting_module_inside_bprm_check_security(struct linux_binprm *bprm)

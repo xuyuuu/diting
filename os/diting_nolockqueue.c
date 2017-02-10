@@ -6,6 +6,8 @@
 
 #include "diting_nolockqueue.h"
 
+static diting_nolockqueue_t * diting_nolockqueue_privhead = NULL;
+
 static int diting_nolockqueue_atomic32_cmpset(volatile uint32_t *dst, uint32_t exp, uint32_t src)
 {
     uint8_t res;
@@ -46,7 +48,7 @@ static diting_nolockqueue_t *diting_nolockqueue_module_inside_init_npool(uint32_
 
 	npool = (struct diting_nolockqueue *)kmalloc(sizeof(struct diting_nolockqueue)
 			+ sizeof(void *) * tnem, GFP_KERNEL);
-	if(npool)/*calloc success and initialize*/
+	if(npool && !IS_ERR(npool))/*calloc success and initialize*/
 	{
 		for(i = 0; i < tnem; i++)
 		{
@@ -57,6 +59,8 @@ static diting_nolockqueue_t *diting_nolockqueue_module_inside_init_npool(uint32_
 		npool->prod.mask = npool->cons.mask = tnem - 1;
 		npool->prod.head = npool->cons.head = 0;
 		npool->prod.tail = npool->cons.tail = 0;
+
+		diting_nolockqueue_privhead = npool;
 	}
 	return npool;
 }
@@ -66,11 +70,18 @@ static diting_nolockqueue_t *diting_nolockqueue_module_create(uint32_t nem)
 	struct diting_nolockqueue *npool;
 
 	npool = diting_nolockqueue_module_inside_init_npool(nem);
-	if(!npool)
+	if(!npool || IS_ERR(npool)){
+		npool = NULL;
 		goto out;
+	}
 
 out:
 	return npool;
+}
+
+static diting_nolockqueue_t *diting_nolockqueue_module_getqueue(void)
+{
+	return diting_nolockqueue_privhead;
 }
 
 static int diting_nolockqueue_module_enqueue(struct diting_nolockqueue * ring, void * item)
@@ -140,8 +151,10 @@ out:
 	return ret;
 }
 
-static int diting_nolockqueue_module_destroy(void)
+static int diting_nolockqueue_module_destroy(diting_nolockqueue_t *ring)
 {
+	if(ring && !IS_ERR(ring))
+		kfree(ring);
 	return 0;
 }
 
@@ -149,6 +162,7 @@ static int diting_nolockqueue_module_destroy(void)
 struct diting_nolockqueue_module diting_nolockqueue_module = 
 {
 	.create		= diting_nolockqueue_module_create,
+	.getque		= diting_nolockqueue_module_getqueue,
 	.enqueue	= diting_nolockqueue_module_enqueue,
 	.dequeue	= diting_nolockqueue_module_dequeue,
 	.destroy	= diting_nolockqueue_module_destroy

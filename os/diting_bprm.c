@@ -19,6 +19,7 @@
 
 #include "diting_bprm.h"
 #include "diting_util.h"
+#include "diting_nolockqueue.h"
 
 static char *diting_bprm_inside_get_name(struct linux_binprm *bprm, char *kbuf)
 {
@@ -64,9 +65,9 @@ static char * diting_bprm_get_name(struct linux_binprm *bprm, char **name)
 
 int diting_inside_bprm_check_security(struct linux_binprm *bprm)
 {
+	struct diting_procrun_msgnode *item;
 	char *realpath = NULL, *name = NULL, username[64] = {0};
 	struct dentry *dentry = bprm->file->f_dentry;
-	int ret = 0;
 
 	if(!dentry || IS_ERR(dentry))
 		return 0;
@@ -78,10 +79,21 @@ int diting_inside_bprm_check_security(struct linux_binprm *bprm)
 	if(diting_common_getuser(current, username))
 		strncpy(username, "SYSTEM", sizeof("SYSTEM") - 1);
 
+	item = (struct diting_procrun_msgnode *)kmalloc(\
+			sizeof(struct diting_procrun_msgnode), GFP_KERNEL);
+	memset(item, 0x0, sizeof(item));
+	item->type = DITING_PROCRUN;
+	if(current->cred && !IS_ERR(current->cred))
+		item->uid  = current->cred->uid;
+	else
+		item->uid = -1;
+	strncpy(item->username, username, strlen(username));
+	strncpy(item->proc, realpath, sizeof(item->proc) - 1);
+	diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);	
+
 	if(name && !IS_ERR(name))
 		kfree(name);
 
-	ret = 0;
-	return ret;
+	return 0;
 }
 

@@ -8,6 +8,11 @@
 #include <linux/fs.h>
 #include <linux/file.h>
 
+#include "diting_door.h"
+#include "diting_nolockqueue.h"
+#include "diting_ktask.h"
+
+static diting_nolockqueue_t *diting_security_queue = NULL;
 static struct security_operations *diting_security_ops = NULL;
 static unsigned long diting_security_cr0 = 0;
 
@@ -136,6 +141,21 @@ static int __init diting_init(void)
 	}
 
 	printk("----diting_security_ops: %lx\n", (unsigned long)diting_security_ops);
+	/*init queue*/
+	diting_security_queue = diting_nolockqueue_module.create(4096);
+	if(!diting_security_queue){
+		ret = -1;
+		goto out;
+	}
+
+	diting_ktask_module.init();	
+	diting_ktask_module.create();
+	diting_ktask_module.run();
+
+	diting_security_cr0 = diting_door_module.bitopen();
+	diting_door_module.interfaceset(diting_security_ops);
+	diting_door_module.bitclose(diting_security_cr0);
+
 
 out:
 	return ret;
@@ -143,6 +163,15 @@ out:
 
 static void __exit diting_exit(void)
 {
+	diting_security_cr0 = diting_door_module.bitopen();
+	diting_door_module.interfacereset(diting_security_ops);
+	diting_door_module.bitclose(diting_security_cr0);
+
+	/*destroy kernel task resource*/
+	diting_ktask_module.destroy();
+
+	if(diting_security_queue)
+		diting_nolockqueue_module.destroy(diting_security_queue);
 }
 
 module_init(diting_init);

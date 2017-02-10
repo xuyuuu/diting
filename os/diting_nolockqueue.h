@@ -16,9 +16,10 @@ typedef struct diting_nolockqueue diting_nolockqueue_t;
 struct diting_nolockqueue_module
 {
 	diting_nolockqueue_t *(* create)(uint32_t nem);
+	diting_nolockqueue_t *(* getque)(void);
 	int (* enqueue)(diting_nolockqueue_t *ring, void *item);
 	int (* dequeue)(diting_nolockqueue_t *ring, void **item);
-	int (* destroy)(void);
+	int (* destroy)(diting_nolockqueue_t *ring);
 }__attribute__((packed));
 
 

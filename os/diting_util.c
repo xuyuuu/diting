@@ -193,26 +193,28 @@ static char * diting_common_inside_get_accessname(struct dentry *dentry, char *k
 	return pathroot;
 }
 
-char * diting_common_get_name(struct task_struct *task, char * name, struct dentry *dentry, int type)
+char * diting_common_get_name(struct task_struct *task, char ** name, struct dentry *dentry, int type)
 {
-	name = kmalloc(PAGE_SIZE, GFP_KERNEL);
-	if (!name)
+	char *p = NULL, *path = NULL;
+
+	path = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!path || IS_ERR(path)){
+		path = NULL;
 		return NULL;
-	memset(name, 0x0, PAGE_SIZE);
+	}
+	memset(path, 0x0, PAGE_SIZE);
 
 	if (DITING_FULLFILE_ACCESS_TYPE == type)
-	{
-		name = diting_common_inside_get_accessname(dentry, name);
-	}
+		p = diting_common_inside_get_accessname(dentry, path);
 	else
-	{
-		name = diting_common_inside_get_taskname(task, name);
-	}
+		p = diting_common_inside_get_taskname(task, path);
 
-	if (!name)
-		kfree(name);
+	if (!p || IS_ERR(p))
+		kfree(path);
 
-	return name;
+	*name = path;
+
+	return p;
 }
 
 
