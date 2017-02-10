@@ -1,18 +1,27 @@
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <dlfcn.h>
 #include <getopt.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include "diting_signal.h"
+#include "diting_common.h"
+
+static pid_t diting_main_global_pid;
 
 #define DITING_AGENT_DYNAMIC_START_FNAME	"getopt"
 extern int getopt(int argc, char * const argv[], const char * optstring);
 
+/*
 #define DITING_AGENT_DYNAMIC_STOP_FNAME	"usleep"
 extern int usleep(useconds_t usec);
+*/
 
 static int
 diting_main_set_procname(char *name, char * const *argv)
@@ -36,13 +45,19 @@ diting_main_detach_task()
 	while(0 == diting_signal_module.getstatus()){
 		sleep(3);	
 	}
+	remove(DITING_COMMON_PID_LOCKFILE);
+
 	return 0;
 }
+
 
 static int
 diting_main_start(char * const *argv)
 {
 	pid_t apid;
+
+	if(diting_common_get_lockfile())
+		goto out;
 
 	apid = fork();
 	if(apid == 0){
@@ -51,19 +66,14 @@ diting_main_start(char * const *argv)
 
 		diting_signal_module.init();
 		diting_main_detach_task();	
+		exit(0);
 	}
-	diting_signal_module.setpid(apid);
+	diting_main_global_pid = apid;
+	diting_common_put_lockfile(apid);
 
+out:
 	return 0;
 }
-
-static int
-diting_main_stop()
-{
-	diting_signal_module.stop();	
-	return 0;
-}
-
 
 int getopt(int argc, char * const argv[],
 	const char *optstring)
@@ -76,6 +86,19 @@ int getopt(int argc, char * const argv[],
 		return -1;
 }
 
+/*
+ *
+static int
+diting_main_stop()
+{
+	if(kill(diting_main_global_pid, SIGUSR1))
+		kill(diting_main_global_pid, SIGUSR2);
+	waitpid(diting_main_global_pid, NULL, 0);
+
+	return 0;
+}
+
+
 int usleep(useconds_t usec)
 {
 	if(usec > 1000)
@@ -87,3 +110,4 @@ int usleep(useconds_t usec)
 	else
 		return -1;
 }
+*/
