@@ -1,0 +1,21 @@
+CC=gcc
+
+BIN_ELF=dthijack
+BIN_LIB=libb.so
+BIN=${BIN_LIB} ${BIN_ELF}
+LDFLAGS_LIB= -ldl -lpthread
+CFLAGS_LIB=-fPIC -shared -Wall
+LDFLAGS_BIN=
+CFLAGS_BIN=-Wall -Werror
+
+
+all : ${BIN}
+
+${BIN_LIB}:diting_main.c diting_signal.c
+	${CC} $^ -o $@ ${CFLAGS_LIB} ${LDFLAGS_LIB}
+
+${BIN_ELF} : diting_hijack.c 
+	${CC} $^ -o $@ ${CFLAGS_BIN} $(LDFLAGS_BIN)
+
+clean :
+	rm ${BIN_ELF} ${BIN_LIB} *.o -f
