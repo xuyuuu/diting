@@ -15,7 +15,7 @@ typedef enum DITING_SYSCTL_TYPE{
 struct diting_sysctl_module 
 {
 	int (* init)(void);
-	int (* chkstatus)(sysctl_type_t);
+	int (* chkstatus)(sysctl_type_t, uint32_t *old);
 	int (* destroy)(void);
 };
 

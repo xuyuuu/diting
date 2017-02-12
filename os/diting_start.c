@@ -140,7 +140,7 @@ static int __init diting_init(void)
 		goto out;
 	}
 
-	printk("----diting_security_ops: %lx\n", (unsigned long)diting_security_ops);
+	printk("DITING IS RUNNING !!!\n");
 	/*init queue*/
 	diting_security_queue = diting_nolockqueue_module.create(4096);
 	if(!diting_security_queue){

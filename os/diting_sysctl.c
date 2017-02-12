@@ -218,7 +218,7 @@ diting_sysctl_module_destroy(void)
 
 
 static int
-diting_sysctl_module_chkstatus(sysctl_type_t type)
+diting_sysctl_module_chkstatus(sysctl_type_t type, uint32_t *old)
 {
 	int ret = -1;
 
@@ -230,8 +230,10 @@ diting_sysctl_module_chkstatus(sysctl_type_t type)
 		}
 		break;
 	case DITING_PROCBEHAVIOR_SWITCH:
-		if(diting_sysctl_table_procbehavior_switch)
+		if(*old != diting_sysctl_table_procbehavior_switch){
+			*old = diting_sysctl_table_procbehavior_switch;
 			ret = 0;
+		}
 		break;
 	case DITING_ACCESSBEHAVIOR_RELOAD:
 		if(diting_sysctl_table_accessbehavior_reload){
@@ -240,8 +242,10 @@ diting_sysctl_module_chkstatus(sysctl_type_t type)
 		}
 		break;
 	case DITING_ACCESSBEHAVIOR_SWITCH:
-		if(diting_sysctl_table_accessbehavior_switch)
+		if(*old != diting_sysctl_table_accessbehavior_switch){
+			*old = diting_sysctl_table_accessbehavior_switch;
 			ret= 0;
+		}
 		break;
 	case DITING_KILLERBEHAVIOR_RELOAD:
 		if(diting_sysctl_table_killerbehavior_reload){
@@ -250,8 +254,10 @@ diting_sysctl_module_chkstatus(sysctl_type_t type)
 		}
 		break;
 	case DITING_KILLERBEHAVIOR_SWITCH:
-		if(diting_sysctl_table_killerbehavior_switch)
+		if(*old != diting_sysctl_table_killerbehavior_switch){
+			*old = diting_sysctl_table_killerbehavior_switch;
 			ret = 0;
+		}
 		break;
 	case DITING_NETWORDBEHAVIOR_RELOAD:
 		if(diting_sysctl_table_networkbehavior_reload){
@@ -260,8 +266,10 @@ diting_sysctl_module_chkstatus(sysctl_type_t type)
 		}
 		break;
 	case DITING_NETWORDBEHAVIOR_SWITCH:
-		if(diting_sysctl_table_networkbehavior_switch)
+		if(*old != diting_sysctl_table_networkbehavior_switch){
+			*old = diting_sysctl_table_networkbehavior_switch;
 			ret = 0;
+		}
 		break;
 	default:	
 		break;
