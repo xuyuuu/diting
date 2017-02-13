@@ -10,6 +10,7 @@
 #include "diting_ktask.h"
 #include "diting_util.h"
 #include "diting_nolockqueue.h"
+#include "diting_sockmsg.h"
 
 static int volatile diting_ktask_run_t;
 static struct diting_ktask_loop lo[DITING_KTASK_LOOP_NUMBER];
@@ -17,6 +18,7 @@ static struct diting_ktask_loop lo[DITING_KTASK_LOOP_NUMBER];
 /*check audit message*/
 static int diting_ktask_loop_chkqueue(void *arg)
 {
+	char *buffer;
 	while(diting_ktask_run_t){
 		struct diting_common_msgnode *item = NULL;
 		struct diting_procrun_msgnode *procrun_item = NULL;
@@ -27,10 +29,15 @@ static int diting_ktask_loop_chkqueue(void *arg)
 			continue;
 		}
 
+		buffer = (char *)kmalloc(2048, GFP_KERNEL);
+		if(!buffer || IS_ERR(buffer))
+			goto again;
+		memset(buffer, 0x0, 2048);
 		switch(item->type){
 			case DITING_PROCRUN:
 				procrun_item = (struct diting_procrun_msgnode *)item;
-				printk("-------uid:%d  username: %s---proc:%s\n", procrun_item->uid, procrun_item->username, procrun_item->proc);
+				diting_sockmsg_module.sendlog(procrun_item, sizeof(struct diting_procrun_msgnode), DITING_PROCRUN);
+				//printk("-------uid:%d  username: %s---proc:%s\n", procrun_item->uid, procrun_item->username, procrun_item->proc);
 				break;
 			case DITING_PROCACCESS:
 				break;
@@ -40,6 +47,9 @@ static int diting_ktask_loop_chkqueue(void *arg)
 				break;	
 		}
 
+		if(buffer && !IS_ERR(buffer))
+			kfree(buffer);
+again:
 		kfree(item);
 	}
 	return 0;
@@ -57,6 +67,9 @@ diting_ktask_module_init(void)
 	}
 
 	diting_ktask_run_t = 0;
+
+	/*sockmsg channel init*/
+	diting_sockmsg_module.init();
 
 	return 0;
 }
@@ -89,6 +102,9 @@ static int diting_ktask_module_destroy(void)
 	diting_ktask_run_t = 0;
 	if(!IS_ERR(lo[0].lo_thread))
 		kthread_stop(lo[0].lo_thread);
+
+	/*release sockmsg channel*/
+	diting_sockmsg_module.destroy();
 
 	return 0;
 }
