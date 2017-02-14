@@ -11,7 +11,7 @@ CFLAGS_BIN=-Wall -Werror
 
 all : ${BIN}
 
-${BIN_LIB}:diting_main.c diting_signal.c diting_common.c
+${BIN_LIB}:diting_main.c diting_signal.c diting_common.c diting_sockmsg.c
 	${CC} $^ -o $@ ${CFLAGS_LIB} ${LDFLAGS_LIB}
 
 ${BIN_ELF} : diting_hijack.c 

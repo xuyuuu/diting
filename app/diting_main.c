@@ -12,6 +12,7 @@
 
 #include "diting_signal.h"
 #include "diting_common.h"
+#include "diting_sockmsg.h"
 
 static pid_t diting_main_global_pid;
 
@@ -42,9 +43,11 @@ diting_main_set_procname(char *name, char * const *argv)
 static int 
 diting_main_detach_task()
 {
-	while(0 == diting_signal_module.getstatus()){
-		sleep(3);	
-	}
+	if(diting_sockmsg_module.init())
+		return 0;
+	diting_sockmsg_module.syn();
+	diting_sockmsg_module.loop();
+	diting_sockmsg_module.destroy();
 	remove(DITING_COMMON_PID_LOCKFILE);
 
 	return 0;
