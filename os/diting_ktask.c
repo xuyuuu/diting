@@ -36,8 +36,8 @@ static int diting_ktask_loop_chkqueue(void *arg)
 		switch(item->type){
 			case DITING_PROCRUN:
 				procrun_item = (struct diting_procrun_msgnode *)item;
-				diting_sockmsg_module.sendlog(procrun_item, sizeof(struct diting_procrun_msgnode), DITING_PROCRUN);
 				//printk("-------uid:%d  username: %s---proc:%s\n", procrun_item->uid, procrun_item->username, procrun_item->proc);
+				diting_sockmsg_module.sendlog(procrun_item, sizeof(struct diting_procrun_msgnode), DITING_PROCRUN);
 				break;
 			case DITING_PROCACCESS:
 				break;

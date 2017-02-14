@@ -1,11 +1,17 @@
 #ifndef __diting_util_h__
 #define __diting_util_h__
 
+#ifndef __USERSPACE__
+
 #define		EOF	-1
 #define DITING_SYMBOL_DEFAULT_ADDRESS		"/proc/kallsyms"
 
 #define DITING_FULLFILE_TASK_TYPE      0
 #define DITING_FULLFILE_ACCESS_TYPE    1
+
+#endif
+
+#define DITING_SOCKMSG_SYN	1024
 
 typedef enum DITING_MSGTYPE{
 	DITING_PROCRUN = 0,
@@ -36,9 +42,11 @@ struct diting_procrun_msgnode{
 	char proc[1024];
 }__attribute__((packed));
 
+#ifndef __USERSPACE__
 extern char *diting_common_filp_fgets(char *str, int size, struct file *filp); 
 extern char * diting_common_get_name(struct task_struct *task, 
 		char** name, struct dentry *dentry, int type);
 extern int diting_common_getuser(struct task_struct *p, char *username);
+#endif
 
 #endif

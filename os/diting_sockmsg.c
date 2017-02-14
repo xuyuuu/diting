@@ -14,6 +14,7 @@
 #include <linux/netlink.h>
 
 #include "diting_sockmsg.h"
+#include "diting_util.h"
 
 static pid_t diting_userspace_pid;
 static struct sock * diting_kernelspace_sk;
@@ -40,13 +41,17 @@ again:
         if (!NLMSG_OK(nlh, skb->len))
                 goto out;
 
-        diting_userspace_pid = NETLINK_CREDS(skb)->pid;
+printk("=============pid: %d  type: %d=======\n", NETLINK_CREDS(skb)->pid, nlh->nlmsg_type);
+	if(DITING_SOCKMSG_SYN == nlh->nlmsg_type){
+		diting_userspace_pid = NETLINK_CREDS(skb)->pid;
+	}
 out:
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
         if(skb && !IS_ERR(skb))
                 skb_free_datagram(sk, skb);
 #endif
+
         return;
 }
 
@@ -56,16 +61,16 @@ diting_sockmsg_module_init(void)
 	diting_userspace_pid = 0;
 
         /*netlink socket channel*/
-#define DITING_NETLINK_PROTOCOL                30
+#define DITING_SOCKMSG_PROTOCOL                30
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18)
-        diting_kernelspace_sk = netlink_kernel_create(DITING_NETLINK_PROTOCOL, 0, diting_sockmsg_module_inside_msgrecv, THIS_MODULE);
+        diting_kernelspace_sk = netlink_kernel_create(DITING_SOCKMSG_PROTOCOL, 0, diting_sockmsg_module_inside_msgrecv, THIS_MODULE);
 #elif (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32))
-        diting_kernelspace_sk = netlink_kernel_create(&init_net, DITING_NETLINK_PROTOCOL, 0, diting_sockmsg_module_inside_msgrecv, NULL, THIS_MODULE);
+        diting_kernelspace_sk = netlink_kernel_create(&init_net, DITING_SOCKMSG_PROTOCOL, 0, diting_sockmsg_module_inside_msgrecv, NULL, THIS_MODULE);
 #elif (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 32))
         struct netlink_kernel_cfg nelkcfg;
         memset(&nelkcfg, 0x00, sizeof(nelkcfg));
         nelkcfg.input = diting_sockmsg_module_inside_msgrecv;
-        diting_kernelspace_sk = netlink_kernel_create(&init_net, DITING_NETLINK_PROTOCOL, &nelkcfg);
+        diting_kernelspace_sk = netlink_kernel_create(&init_net, DITING_SOCKMSG_PROTOCOL, &nelkcfg);
 #endif
 
 	diting_kernelspace_sk->sk_sndtimeo = 10;
@@ -102,7 +107,7 @@ diting_sockmsg_module_sendlog(void *data, int datalen, int type)
                 goto out;
 
         rc = 0;
-
+	goto out;
 nlmsg_failure:
         kfree_skb(skb);
 out:
