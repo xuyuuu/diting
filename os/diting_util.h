@@ -42,6 +42,17 @@ struct diting_procrun_msgnode{
 	char proc[1024];
 }__attribute__((packed));
 
+struct diting_procaccess_msgnode{
+	diting_msgtype_t type;
+	int actype;
+	int mode;
+	uid_t uid;
+	char username[64];
+	char proc[1024];
+	char old_path[1024];
+	char new_path[1024];
+}__attribute__((packed));
+
 #ifndef __USERSPACE__
 extern char *diting_common_filp_fgets(char *str, int size, struct file *filp); 
 extern char * diting_common_get_name(struct task_struct *task, 

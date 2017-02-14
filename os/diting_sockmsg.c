@@ -85,7 +85,7 @@ diting_sockmsg_module_sendlog(void *data, int datalen, int type)
         struct nlmsghdr *nlh;
         char *pmsg;
         size_t len;
-        int rc; 
+        int rc = 0;
 
         if (!diting_kernelspace_sk || IS_ERR(diting_kernelspace_sk) || !diting_userspace_pid)
                 return -1; 

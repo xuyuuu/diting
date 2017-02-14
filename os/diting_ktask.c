@@ -21,6 +21,7 @@ static int diting_ktask_loop_chkqueue(void *arg)
 	while(diting_ktask_run_t){
 		struct diting_common_msgnode *item = NULL;
 		struct diting_procrun_msgnode *procrun_item = NULL;
+		struct diting_procaccess_msgnode *procaccess_item = NULL;
 
 		diting_nolockqueue_module.dequeue(diting_nolockqueue_module.getque(), (void **)&item);
 		if(!item || IS_ERR(item)){
@@ -35,14 +36,14 @@ static int diting_ktask_loop_chkqueue(void *arg)
 				diting_sockmsg_module.sendlog(procrun_item, sizeof(struct diting_procrun_msgnode), DITING_PROCRUN);
 				break;
 			case DITING_PROCACCESS:
+				procaccess_item = (struct diting_procaccess_msgnode *)item;
+				diting_sockmsg_module.sendlog(procaccess_item, sizeof(struct diting_procaccess_msgnode), DITING_PROCACCESS);
 				break;
 			case DITING_KILLER:
 				break;
 			default:
 				break;	
 		}
-
-again:
 		kfree(item);
 	}
 	return 0;

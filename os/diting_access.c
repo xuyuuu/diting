@@ -35,21 +35,51 @@
 
 #include "diting_util.h"
 #include "diting_access.h"
+#include "diting_nolockqueue.h"
 
 int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dentry, struct dentry *old_dentry, int mode, int type)
 {
-	char *fullpath = NULL, *comm, *name, *dstpath = NULL;
-	int result = 0, found = 0;
+	struct diting_procaccess_msgnode *item;
+	char username[64] = {0}, *old_fullpath = NULL, *old_name = NULL;
+	char *new_fullpath = NULL, *new_name = NULL, *comm;
 
-	comm = task->comm;
+	comm = current->comm;
 
-	fullpath = diting_common_get_name(task, &name, new_dentry, DITING_FULLFILE_ACCESS_TYPE);
-	if(!fullpath || IS_ERR(fullpath))
+	new_fullpath = diting_common_get_name(task, &new_name, new_dentry, DITING_FULLFILE_ACCESS_TYPE);
+	if(!new_fullpath || IS_ERR(new_fullpath))
 		goto out;
 
+	if(old_dentry && !IS_ERR(old_dentry)){
+		old_fullpath = diting_common_get_name(task, &old_name, old_dentry, DITING_FULLFILE_ACCESS_TYPE);
+		if(!old_fullpath || IS_ERR(old_fullpath))
+			goto out;
+	}
+
+	if(diting_common_getuser(current, username))
+		strncpy(username, "SYSTEM", sizeof("SYSTEM") - 1);
+
+	item = (struct diting_procaccess_msgnode *)kmalloc(\
+			sizeof(struct diting_procaccess_msgnode), GFP_KERNEL);
+	memset(item, 0x0, sizeof(struct diting_procaccess_msgnode));
+	item->type = DITING_PROCACCESS;
+	if(current->cred && !IS_ERR(current->cred))
+		item->uid  = current->cred->uid;
+	else
+		item->uid = -1;
+	strncpy(item->proc, comm, strlen(comm));
+	strncpy(item->username, username, strlen(username));
+	strncpy(item->new_path, new_fullpath, sizeof(item->new_path) - 1);
+	if(old_fullpath)
+		strncpy(item->old_path, old_fullpath, sizeof(item->old_path) - 1);
+	item->actype = type;
+	item->mode = mode;
+	diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
+
 out:
-	if(fullpath && !IS_ERR(fullpath))
-		kfree(name);
+	if(new_fullpath && !IS_ERR(new_fullpath))
+		kfree(new_name);
+	if(old_fullpath)
+		kfree(old_name);
 
 	return 0;
 }
