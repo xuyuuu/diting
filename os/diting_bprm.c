@@ -81,7 +81,7 @@ int diting_inside_bprm_check_security(struct linux_binprm *bprm)
 
 	item = (struct diting_procrun_msgnode *)kmalloc(\
 			sizeof(struct diting_procrun_msgnode), GFP_KERNEL);
-	memset(item, 0x0, sizeof(item));
+	memset(item, 0x0, sizeof(struct diting_procrun_msgnode));
 	item->type = DITING_PROCRUN;
 	if(current->cred && !IS_ERR(current->cred))
 		item->uid  = current->cred->uid;

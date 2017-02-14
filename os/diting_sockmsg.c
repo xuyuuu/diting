@@ -101,7 +101,7 @@ diting_sockmsg_module_sendlog(void *data, int datalen, int type)
         if(len){
                 pmsg = (char *)NLMSG_DATA(nlh);
                 memcpy(pmsg, data, datalen);
-        }   
+        }
         rc = netlink_unicast(diting_kernelspace_sk, skb, diting_userspace_pid, 0); 
         if (rc < 0)
                 goto out;

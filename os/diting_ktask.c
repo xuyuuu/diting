@@ -18,7 +18,6 @@ static struct diting_ktask_loop lo[DITING_KTASK_LOOP_NUMBER];
 /*check audit message*/
 static int diting_ktask_loop_chkqueue(void *arg)
 {
-	char *buffer;
 	while(diting_ktask_run_t){
 		struct diting_common_msgnode *item = NULL;
 		struct diting_procrun_msgnode *procrun_item = NULL;
@@ -29,10 +28,6 @@ static int diting_ktask_loop_chkqueue(void *arg)
 			continue;
 		}
 
-		buffer = (char *)kmalloc(2048, GFP_KERNEL);
-		if(!buffer || IS_ERR(buffer))
-			goto again;
-		memset(buffer, 0x0, 2048);
 		switch(item->type){
 			case DITING_PROCRUN:
 				procrun_item = (struct diting_procrun_msgnode *)item;
@@ -47,8 +42,6 @@ static int diting_ktask_loop_chkqueue(void *arg)
 				break;	
 		}
 
-		if(buffer && !IS_ERR(buffer))
-			kfree(buffer);
 again:
 		kfree(item);
 	}
