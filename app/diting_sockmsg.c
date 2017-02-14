@@ -99,6 +99,7 @@ int diting_sockmsg_module_inside_recvfromnlk(int fd)
 {
 	struct nlmsghdr *nlh = NULL;
 	int len , ret, flag, datalen;
+	char buffer[2048] = {0};
 
 	struct sockaddr_nl addr;
 	memset(&addr, 0x0, sizeof(addr));
@@ -139,14 +140,46 @@ receive:
 		goto err;
 	}
 
-	struct diting_procrun_msgnode *item = NULL;
+	struct diting_procrun_msgnode *procrun_item = NULL;
+	struct diting_procaccess_msgnode *procaccess_item = NULL;
 
 	switch(nlh->nlmsg_type){
 	case DITING_PROCRUN:
-		item = NLMSG_DATA(nlh);
-		diting_logdump_module.push("%s:%d:%s:%s", item->type, item->uid, item->username, item->proc);
+		procrun_item = NLMSG_DATA(nlh);
+		diting_logdump_module.push("%d,[uid:%d],[user:%s],[action: Run Program %s]", procrun_item->type, procrun_item->uid, 
+				procrun_item->username, procrun_item->proc);
 		break;
 	case DITING_PROCACCESS:
+		procaccess_item = NLMSG_DATA(nlh);
+		if(DITING_PROCACCESS_INODE_CREATE == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Create File %s]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->new_path);
+		}else if(DITING_PROCACCESS_INODE_UNLINK == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Delete LinkFile %s]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->new_path);
+		}else if(DITING_PROCACCESS_INODE_LINK == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Create Hard LinkFile %s Point %s]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->new_path, procaccess_item->old_path);
+		}else if(DITING_PROCACCESS_INODE_SYMLINK == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Create Symbol LinkFile %s Point %s]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->new_path, procaccess_item->old_path);
+		}else if(DITING_PROCACCESS_INODE_RENAME == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Rename File %s To %s]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->old_path, procaccess_item->new_path);
+		}else if(DITING_PROCACCESS_INODE_MKDIR == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Mkdir Path %s]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->new_path);
+		}else if(DITING_PROCACCESS_INODE_RMDIR == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Rmdir Path %s]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->new_path);
+		}else if(DITING_PROCACCESS_INODE_ACCESS == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Access Path %s],[mode:%d]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->new_path, procaccess_item->mode);
+		}else if(DITING_PROCACCESS_FILE_ACCESS == procaccess_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[proc:%s],[action:Access Path %s],[mode:%d]",procaccess_item->uid,
+				procaccess_item->username, procaccess_item->proc, procaccess_item->new_path, procaccess_item->mode);
+		}
+		diting_logdump_module.push("%d,%s", procaccess_item->type, buffer);
 		break;
 	case DITING_KILLER:
 		break;
