@@ -42,14 +42,14 @@ static int (* old_inode_rmdir)(struct inode *dir, struct dentry *dentry);
 
 static int diting_module_inside_inode_rmdir(struct inode *dir, struct dentry *dentry)
 {
-	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_RMDIR);
+	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_RMDIR, NULL);
 
 	return 0;
 }
 
 static int diting_module_inside_inode_mkdir(struct inode *inode, struct dentry *dentry, int mask)
 {
-	diting_dentry_has_permission(current, dentry, NULL, mask, DITING_PROCACCESS_INODE_MKDIR);
+	diting_dentry_has_permission(current, dentry, NULL, mask, DITING_PROCACCESS_INODE_MKDIR, NULL);
 
 	return 0;
 }
@@ -57,35 +57,35 @@ static int diting_module_inside_inode_mkdir(struct inode *inode, struct dentry *
 static int diting_module_inside_inode_rename(struct inode *old_inode, struct dentry *old_dentry, 
 		struct inode * new_inode, struct dentry *new_dentry)
 {
-	diting_dentry_has_permission(current, new_dentry, old_dentry, 0, DITING_PROCACCESS_INODE_RENAME);
+	diting_dentry_has_permission(current, new_dentry, old_dentry, 0, DITING_PROCACCESS_INODE_RENAME, NULL);
 
 	return 0;
 }
 
 static int diting_module_inside_inode_symlink(struct inode *dir, struct dentry *dentry, const char *old_name)
 {
-	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_SYMLINK);
+	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_SYMLINK, old_name);
 
 	return 0;
 }
 
 static int diting_module_inside_inode_link(struct dentry *old_dentry, struct inode *dir, struct dentry *new_dentry)
 {
-	diting_dentry_has_permission(current, new_dentry, old_dentry, 0, DITING_PROCACCESS_INODE_LINK);
+	diting_dentry_has_permission(current, new_dentry, old_dentry, 0, DITING_PROCACCESS_INODE_LINK, NULL);
 
 	return 0;
 }
 
 static int diting_module_inside_inode_unlink(struct inode *dir, struct dentry *dentry)
 {
-	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_UNLINK);
+	diting_dentry_has_permission(current, dentry, NULL, 0, DITING_PROCACCESS_INODE_UNLINK, NULL);
 
 	return 0;
 }
 
 static int diting_module_inside_inode_create(struct inode *dir, struct dentry *dentry, int mode)
 {
-	diting_dentry_has_permission(current, dentry, NULL, mode, DITING_PROCACCESS_INODE_CREATE);
+	diting_dentry_has_permission(current, dentry, NULL, mode, DITING_PROCACCESS_INODE_CREATE, NULL);
 
 	return 0;
 }
@@ -113,7 +113,7 @@ static int diting_module_inside_inode_permission(struct inode *inode, int mask)
 	if(!dentry || IS_ERR(dentry))
 		goto out;
 
-	diting_dentry_has_permission(current, dentry, NULL, mask, DITING_PROCACCESS_INODE_ACCESS);
+	diting_dentry_has_permission(current, dentry, NULL, mask, DITING_PROCACCESS_INODE_ACCESS, NULL);
 
 out:
 	if(dentry)
@@ -127,7 +127,7 @@ static int diting_module_inside_file_permission(struct file *file, int mask)
 	if(!file->f_dentry || IS_ERR(file->f_dentry))
 		goto out;
 
-	diting_dentry_has_permission(current, file->f_dentry, NULL, mask, DITING_PROCACCESS_FILE_ACCESS);
+	diting_dentry_has_permission(current, file->f_dentry, NULL, mask, DITING_PROCACCESS_FILE_ACCESS, NULL);
 
 out:
 	return 0;

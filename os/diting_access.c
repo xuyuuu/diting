@@ -37,7 +37,8 @@
 #include "diting_access.h"
 #include "diting_nolockqueue.h"
 
-int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dentry, struct dentry *old_dentry, int mode, int type)
+int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dentry, 
+		struct dentry *old_dentry, int mode, int type, const char *arg)
 {
 	struct diting_procaccess_msgnode *item;
 	char username[64] = {0}, *old_fullpath = NULL, *old_name = NULL;
@@ -49,11 +50,16 @@ int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dent
 	if(!new_fullpath || IS_ERR(new_fullpath))
 		goto out;
 
+	if(arg){
+		old_fullpath = arg;	
+		goto skip;
+	}
 	if(old_dentry && !IS_ERR(old_dentry)){
 		old_fullpath = diting_common_get_name(task, &old_name, old_dentry, DITING_FULLFILE_ACCESS_TYPE);
 		if(!old_fullpath || IS_ERR(old_fullpath))
 			goto out;
 	}
+skip:
 
 	if(diting_common_getuser(current, username))
 		strncpy(username, "SYSTEM", sizeof("SYSTEM") - 1);
@@ -78,7 +84,7 @@ int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dent
 out:
 	if(new_fullpath && !IS_ERR(new_fullpath))
 		kfree(new_name);
-	if(old_fullpath)
+	if(!arg && old_fullpath)
 		kfree(old_name);
 
 	return 0;

@@ -13,6 +13,13 @@
 
 #define DITING_SOCKMSG_SYN	1024
 
+#define MAY_EXEC 1
+#define MAY_WRITE 2
+#define MAY_READ 4
+#define MAY_APPEND 8
+#define MAY_ACCESS 16
+#define MAY_OPEN 32
+
 typedef enum DITING_MSGTYPE{
 	DITING_PROCRUN = 0,
 	DITING_PROCACCESS,
