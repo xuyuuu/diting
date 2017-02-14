@@ -17,6 +17,9 @@
 #include "diting_multiring.h"
 #include "diting_logdump.h"
 
+#define __USERSPACE__
+#include "../os/diting_util.h"
+
 static volatile int diting_logdump_run_flag;
 
 static pthread_mutex_t diting_logdump_lock;
@@ -33,13 +36,15 @@ static char *diting_logpath[] = {
 };
 
 
-static int diting_logdump_module_inside_inside_dump(char *errmsg, char *file)
+static int diting_logdump_module_inside_inside_dump(char *errmsg)
 {
         FILE *fp;
+	int type;
 	struct stat _stat;
 	char *tag = "a+";
         char st[128] = {0};
         time_t t = time(NULL);
+	char *file = NULL;
 
         ctime_r(&t, st);
         st[strlen(st) - 1] = '\0';
@@ -47,19 +52,26 @@ static int diting_logdump_module_inside_inside_dump(char *errmsg, char *file)
 	memset(&_stat, 0x0, sizeof(_stat));
 	if (!stat(file, &_stat) && _stat.st_size > DITING_LOGDUMP_MAX_SIZE)
 		tag = "w+";
+
+	/*check file type*/
+	type = strtoul(errmsg, NULL, 10);
+	if(DITING_PROCRUN == type)
+		file = DITING_LOGDUMP_PROC"/"DITING_LOGDUMP_PATTERN".log";
+	else if(DITING_PROCACCESS == type)
+		file = DITING_LOGDUMP_ACCESS"/"DITING_LOGDUMP_PATTERN".log";
+	else if(DITING_KILLER == type)
+		file = DITING_LOGDUMP_KILLER"/"DITING_LOGDUMP_PATTERN".log";
+	else
+		goto out;
 		
         fp = fopen(file, tag);
         if (fp == NULL)
         {   
-                fprintf(stderr, "[%s] --- fopen failed %s.\n",st, DITING_LOGDUMP_FILE);
+                fprintf(stderr, "[%s] --- fopen failed %s.\n",st, file);
                 goto out;
         }
 
         fprintf(fp, "[%s] --- DUMP: %s\n", st, errmsg);
-	/*
-        memset(buf, 0, sizeof(buf));
-        strerror_r(errno, buf, sizeof(buf));
-	*/
         fclose(fp);
 
 out:
@@ -105,7 +117,7 @@ static void * diting_logdump_module_inside_dump(void *arg)
 
 static int diting_logdump_module_init(void)
 {
-	int ret = 0;
+	int ret = 0, i;
 	//char buff[1024] = {0};
 	pthread_t diting_logdump_pid;
 
@@ -135,6 +147,12 @@ static int diting_logdump_module_init(void)
 		goto out;
         }    
         pthread_detach(diting_logdump_pid);
+
+	/*init log path*/
+	for(i = 0; i < sizeof(diting_logpath) / sizeof(char *); i++){
+		if(access(diting_logpath[i], F_OK))	
+			mkdir(diting_logpath[i], 0777);
+	}
 
 out:
 	return ret;

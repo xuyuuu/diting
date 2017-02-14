@@ -13,6 +13,7 @@
 
 #include "diting_sockmsg.h"
 #include "diting_signal.h"
+#include "diting_logdump.h"
 
 #define __USERSPACE__
 #include "../os/diting_util.h"
@@ -24,6 +25,10 @@ diting_sockmsg_module_init(void)
 {
 	int ret = 0, on, fd = -1;
         struct sockaddr_nl addr;
+
+	/*init logdump*/
+	diting_logdump_module.init();
+	diting_logdump_module.run();
 
 #define DITING_SOCKMSG_PROTOCOL		30
         fd = socket(AF_NETLINK, SOCK_RAW, DITING_SOCKMSG_PROTOCOL);
@@ -123,29 +128,28 @@ receive:
 		ret = -1;
 		goto err;
 	}
-printf("-------------------------0.\n");
 	if(addr.nl_pid){
 		ret = -1;
 		goto err;
 	}
-printf("-------------------------1.\n");
 
 	datalen = NLMSG_PAYLOAD(nlh, 0);
 	if(datalen <= 0){
 		ret = -1;	
 		goto err;
 	}
-printf("--------type: %d--------------2.\n", nlh->nlmsg_type);
+
+	struct diting_procrun_msgnode *item = NULL;
 
 	switch(nlh->nlmsg_type){
 	case DITING_PROCRUN:
-	printf("----  receive data ---\n");
+		item = NLMSG_DATA(nlh);
+		diting_logdump_module.push("%s:%d:%s:%s", item->type, item->uid, item->username, item->proc);
 		break;
 	case DITING_PROCACCESS:
 		break;
 	case DITING_KILLER:
 		break;
-//	NLMSG_DATA(nlh)
 	}
 
 	ret = 0;
@@ -176,10 +180,8 @@ diting_sockmsg_module_loop(void)
 		if(!nf){
 			usleep(1000);
 			continue;
-		}else if(nf > 0){
-	printf("---------------------------------------\n");
+		}else if(nf > 0)
 			diting_sockmsg_module_inside_recvfromnlk(diting_sockmsg_fd);
-		}
 	}
 
 	return 0;
@@ -190,6 +192,7 @@ diting_sockmsg_module_destroy(void)
 {
 	if(diting_sockmsg_fd > 0)
 		close(diting_sockmsg_fd);
+
 	return 0;
 }
 
