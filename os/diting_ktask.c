@@ -12,6 +12,7 @@
 #include "diting_nolockqueue.h"
 #include "diting_sockmsg.h"
 #include "diting_sysctl.h"
+#include "diting_killer.h"
 
 #include "diting_procfile.h"
 #include "diting_accessfile.h"
@@ -28,6 +29,7 @@ static int diting_ktask_loop_chkqueue(void *arg)
 		struct diting_common_msgnode *item = NULL;
 		struct diting_procrun_msgnode *procrun_item = NULL;
 		struct diting_procaccess_msgnode *procaccess_item = NULL;
+		struct diting_killer_msgnode *killer_item = NULL;
 
 		diting_nolockqueue_module.dequeue(diting_nolockqueue_module.getque(), (void **)&item);
 		if(!item || IS_ERR(item)){
@@ -45,6 +47,8 @@ static int diting_ktask_loop_chkqueue(void *arg)
 				diting_sockmsg_module.sendlog(procaccess_item, sizeof(struct diting_procaccess_msgnode), DITING_PROCACCESS);
 				break;
 			case DITING_KILLER:
+				killer_item = (struct diting_killer_msgnode *)item;
+				diting_sockmsg_module.sendlog(killer_item, sizeof(struct diting_killer_msgnode), DITING_KILLER);
 				break;
 			default:
 				break;	
@@ -59,9 +63,9 @@ static int diting_ktask_loop_chksysctl(void *arg)
 {
 	uint32_t ditingstatus;
 	while(diting_ktask_run_t){
-		msleep(1000);	
+		msleep(1000);
 		if(!diting_sysctl_module.chkstatus(DITING_PROCBEHAVIOR_RELOAD, &ditingstatus))
-			diting_procfile_module.reload();			
+			diting_procfile_module.reload();
 		else if(!diting_sysctl_module.chkstatus(DITING_ACCESSBEHAVIOR_RELOAD, &ditingstatus))
 			diting_accessfile_module.reload();
 		else if(!diting_sysctl_module.chkstatus(DITING_KILLERBEHAVIOR_RELOAD, &ditingstatus))

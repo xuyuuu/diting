@@ -24,6 +24,7 @@ typedef enum DITING_MSGTYPE{
 	DITING_PROCRUN = 0,
 	DITING_PROCACCESS,
 	DITING_KILLER,
+	DITING_SOCKET,
 }diting_msgtype_t;
 
 typedef enum DITING_PROCACCESS_OPTYPE{
@@ -58,6 +59,13 @@ struct diting_procaccess_msgnode{
 	char proc[1024];
 	char old_path[1024];
 	char new_path[1024];
+}__attribute__((packed));
+
+struct diting_killer_msgnode{
+	diting_msgtype_t type;
+	char signal[32];
+	char proc1[1024];
+	char proc2[1024];
 }__attribute__((packed));
 
 #ifndef __USERSPACE__

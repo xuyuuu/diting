@@ -37,14 +37,22 @@
 #include "diting_access.h"
 #include "diting_nolockqueue.h"
 
+#include "diting_sysctl.h"
+#include "diting_accessfile.h"
+
 int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dentry, 
 		struct dentry *old_dentry, int mode, int type, const char *arg)
 {
+	uint32_t status = 0;
 	struct diting_procaccess_msgnode *item;
 	char username[64] = {0}, *old_fullpath = NULL, *old_name = NULL;
 	char *new_fullpath = NULL, *new_name = NULL, *comm;
 
 	comm = current->comm;
+
+	diting_sysctl_module.chkstatus(DITING_ACCESSBEHAVIOR_SWITCH, &status);
+	if(!status)
+		return 0;
 
 	new_fullpath = diting_common_get_name(task, &new_name, new_dentry, DITING_FULLFILE_ACCESS_TYPE);
 	if(!new_fullpath || IS_ERR(new_fullpath))
@@ -52,6 +60,9 @@ int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dent
 
 	/*skip diting path*/
 	if(!strncasecmp(new_fullpath, "/var/log/diting", sizeof("/var/log/diting") - 1))
+		goto out;
+
+	if(diting_accessfile_module.search(new_fullpath))
 		goto out;
 
 	if(arg){
