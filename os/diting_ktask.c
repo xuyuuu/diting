@@ -14,6 +14,9 @@
 #include "diting_sysctl.h"
 
 #include "diting_procfile.h"
+#include "diting_accessfile.h"
+#include "diting_killerfile.h"
+#include "diting_sockfile.h"
 
 static int volatile diting_ktask_run_t;
 static struct diting_ktask_loop lo[DITING_KTASK_LOOP_NUMBER];
@@ -60,12 +63,11 @@ static int diting_ktask_loop_chksysctl(void *arg)
 		if(!diting_sysctl_module.chkstatus(DITING_PROCBEHAVIOR_RELOAD, &ditingstatus))
 			diting_procfile_module.reload();			
 		else if(!diting_sysctl_module.chkstatus(DITING_ACCESSBEHAVIOR_RELOAD, &ditingstatus))
-			;
+			diting_accessfile_module.reload();
 		else if(!diting_sysctl_module.chkstatus(DITING_KILLERBEHAVIOR_RELOAD, &ditingstatus))
-			;
-				
+			diting_killerfile_module.reload();
 		else if(!diting_sysctl_module.chkstatus(DITING_SOCKETBEHAVIOR_RELOAD, &ditingstatus))
-			;
+			diting_sockfile_module.reload();
 	}
 	return 0;
 }

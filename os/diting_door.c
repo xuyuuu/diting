@@ -20,6 +20,7 @@
 #include "diting_util.h"
 #include "diting_door.h"
 #include "diting_bprm.h"
+#include "diting_killer.h"
 #include "diting_access.h"
 
 /* old hook function point */
@@ -38,6 +39,8 @@ static int ( * old_inode_rename)(struct inode *old_inode,
 		struct dentry *old_dentry, struct inode *new_inode, struct dentry *new_dentry);
 static int (* old_inode_mkdir)(struct inode *inode, struct dentry *dentry, int mask);
 static int (* old_inode_rmdir)(struct inode *dir, struct dentry *dentry);
+
+static int (*old_task_kill) (struct task_struct *p, struct siginfo *info, int sig, u32 secid);
 
 
 static int diting_module_inside_inode_rmdir(struct inode *dir, struct dentry *dentry)
@@ -196,6 +199,7 @@ static int diting_door_module_interfaceset(struct security_operations *security_
 	old_inode_rename	= security_point->inode_rename;
 	old_inode_mkdir		= security_point->inode_mkdir;
 	old_inode_rmdir		= security_point->inode_rmdir;
+	old_task_kill		= security_point->task_kill;
 
 	security_point->bprm_check_security = diting_module_inside_bprm_check_security;
 	security_point->file_permission	    = diting_module_inside_file_permission;
@@ -207,6 +211,7 @@ static int diting_door_module_interfaceset(struct security_operations *security_
 	security_point->inode_rename	    = diting_module_inside_inode_rename;
 	security_point->inode_mkdir	    = diting_module_inside_inode_mkdir;
 	security_point->inode_rmdir	    = diting_module_inside_inode_rmdir;
+	security_point->task_kill	    = diting_module_inside_task_kill;
 
 	return 0;
 }
@@ -223,6 +228,7 @@ static int diting_door_module_interfacereset(struct security_operations *securit
 	security_point->inode_rename	    = old_inode_rename;
 	security_point->inode_mkdir	    = old_inode_mkdir;
 	security_point->inode_rmdir	    = old_inode_rmdir;
+	security_point->task_kill	    = old_task_kill;
 
 	return 0;
 }
