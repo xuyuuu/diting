@@ -2,7 +2,7 @@ obj-m := diting.o
 diting-objs := diting_start.o diting_nolockqueue.o\
 	diting_util.o diting_bprm.o diting_ktask.o\
 	diting_door.o diting_access.o diting_sysctl.o\
-	diting_sockmsg.o
+	diting_sockmsg.o diting_procfile.o
 
 
 KERNELDIR = /lib/modules/$(shell uname -r)/build/

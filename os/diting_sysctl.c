@@ -225,7 +225,7 @@ diting_sysctl_module_chkstatus(sysctl_type_t type, uint32_t *old)
 	switch(type){
 	case DITING_PROCBEHAVIOR_RELOAD:
 		if(diting_sysctl_table_procbehavior_reload){
-			diting_sysctl_table_procbehavior_reload = 0;	
+			diting_sysctl_table_procbehavior_reload = 0;
 			ret = 0;
 		}
 		break;
@@ -259,13 +259,13 @@ diting_sysctl_module_chkstatus(sysctl_type_t type, uint32_t *old)
 			ret = 0;
 		}
 		break;
-	case DITING_NETWORDBEHAVIOR_RELOAD:
+	case DITING_SOCKETBEHAVIOR_RELOAD:
 		if(diting_sysctl_table_networkbehavior_reload){
 			diting_sysctl_table_networkbehavior_reload = 0;	
 			ret = 0;
 		}
 		break;
-	case DITING_NETWORDBEHAVIOR_SWITCH:
+	case DITING_SOCKETBEHAVIOR_SWITCH:
 		if(*old != diting_sysctl_table_networkbehavior_switch){
 			*old = diting_sysctl_table_networkbehavior_switch;
 			ret = 0;
@@ -274,14 +274,14 @@ diting_sysctl_module_chkstatus(sysctl_type_t type, uint32_t *old)
 	default:	
 		break;
 	}
+	
 
 	return ret;
 }
 
 
-struct diting_sysctl_module diting_sysctl_module = 
-{
+struct diting_sysctl_module diting_sysctl_module = {
 	.init		= diting_sysctl_module_init,
 	.chkstatus	= diting_sysctl_module_chkstatus,
-	.destroy	= diting_sysctl_module_destroy,
+	.destroy	= diting_sysctl_module_destroy
 };

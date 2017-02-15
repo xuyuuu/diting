@@ -11,6 +11,9 @@
 #include "diting_util.h"
 #include "diting_nolockqueue.h"
 #include "diting_sockmsg.h"
+#include "diting_sysctl.h"
+
+#include "diting_procfile.h"
 
 static int volatile diting_ktask_run_t;
 static struct diting_ktask_loop lo[DITING_KTASK_LOOP_NUMBER];
@@ -32,7 +35,6 @@ static int diting_ktask_loop_chkqueue(void *arg)
 		switch(item->type){
 			case DITING_PROCRUN:
 				procrun_item = (struct diting_procrun_msgnode *)item;
-				//printk("-------uid:%d  username: %s---proc:%s\n", procrun_item->uid, procrun_item->username, procrun_item->proc);
 				diting_sockmsg_module.sendlog(procrun_item, sizeof(struct diting_procrun_msgnode), DITING_PROCRUN);
 				break;
 			case DITING_PROCACCESS:
@@ -45,6 +47,25 @@ static int diting_ktask_loop_chkqueue(void *arg)
 				break;	
 		}
 		kfree(item);
+	}
+	return 0;
+}
+
+/*check sysctl status*/
+static int diting_ktask_loop_chksysctl(void *arg)
+{
+	uint32_t ditingstatus;
+	while(diting_ktask_run_t){
+		msleep(1000);	
+		if(!diting_sysctl_module.chkstatus(DITING_PROCBEHAVIOR_RELOAD, &ditingstatus))
+			diting_procfile_module.reload();			
+		else if(!diting_sysctl_module.chkstatus(DITING_ACCESSBEHAVIOR_RELOAD, &ditingstatus))
+			;
+		else if(!diting_sysctl_module.chkstatus(DITING_KILLERBEHAVIOR_RELOAD, &ditingstatus))
+			;
+				
+		else if(!diting_sysctl_module.chkstatus(DITING_SOCKETBEHAVIOR_RELOAD, &ditingstatus))
+			;
 	}
 	return 0;
 }
@@ -74,8 +95,13 @@ static int diting_ktask_module_create(void)
 			&(lo[0]), "loop%d"	,lo[0].lo_number);
 	if(IS_ERR(lo[0].lo_thread))
 		return -1;
-
 	lo[0].lo_status = KTASK_READY;
+
+	lo[1].lo_thread = kthread_create(diting_ktask_loop_chksysctl,
+			&(lo[1]), "loop%d" ,lo[1].lo_number);
+	if(IS_ERR(lo[1].lo_thread))
+		return -1;
+	lo[1].lo_status = KTASK_READY;
 
 	diting_ktask_run_t = 1;
 	return 0;
@@ -86,6 +112,9 @@ static int diting_ktask_module_run(void)
 {
 	wake_up_process(lo[0].lo_thread);
 	lo[0].lo_status = KTASK_RUNNING;
+
+	wake_up_process(lo[1].lo_thread);
+	lo[1].lo_status = KTASK_RUNNING;
 
 	return 0;
 }

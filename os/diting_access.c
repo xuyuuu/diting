@@ -50,8 +50,12 @@ int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dent
 	if(!new_fullpath || IS_ERR(new_fullpath))
 		goto out;
 
+	/*skip diting path*/
+	if(!strncasecmp(new_fullpath, "/var/log/diting", sizeof("/var/log/diting") - 1))
+		goto out;
+
 	if(arg){
-		old_fullpath = arg;	
+		old_fullpath = (char *)arg;
 		goto skip;
 	}
 	if(old_dentry && !IS_ERR(old_dentry)){
