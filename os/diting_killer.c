@@ -64,7 +64,7 @@ int diting_module_inside_task_kill(struct task_struct *p, struct siginfo *info, 
 {
 	uint32_t status = 0;
 	char *psig = NULL, *srcpath = NULL, *dstpath = NULL,
-	     *srcname = NULL, *dstname = NULL;
+	     *srcname = NULL, *dstname = NULL, username[64] = {0};
 	struct task_struct *srcp, *dstp;
 	struct diting_killer_msgnode *item;
 
@@ -89,12 +89,20 @@ int diting_module_inside_task_kill(struct task_struct *p, struct siginfo *info, 
 	if(!dstpath || IS_ERR(dstpath))
 		goto out;
 
+	if(diting_common_getuser(current, username))
+		strncpy(username, "SYSTEM", sizeof("SYSTEM") - 1);
+
 	item = (struct diting_killer_msgnode *)kmalloc(sizeof(struct diting_killer_msgnode), GFP_KERNEL);
 	memset(item, 0x0, sizeof(struct diting_killer_msgnode));
 	item->type = DITING_KILLER;
 	strncpy(item->signal, psig, strlen(psig));
 	strncpy(item->proc1, srcpath, sizeof(item->proc1) - 1);
 	strncpy(item->proc2, dstpath, sizeof(item->proc2) - 1);
+	if(current->cred && !IS_ERR(current->cred))
+		item->uid  = current->cred->uid;
+	else
+		item->uid = -1;
+	strncpy(item->username, username, strlen(username));
 	diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
 
 out:

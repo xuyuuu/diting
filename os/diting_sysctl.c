@@ -30,16 +30,17 @@ static uint32_t diting_sysctl_table_accessbehavior_reload;
 static uint32_t diting_sysctl_table_accessbehavior_switch;
 static uint32_t diting_sysctl_table_killerbehavior_reload;
 static uint32_t diting_sysctl_table_killerbehavior_switch;
-static uint32_t diting_sysctl_table_networkbehavior_reload;
-static uint32_t diting_sysctl_table_networkbehavior_switch;
+static uint32_t diting_sysctl_table_socketbehavior_reload;
+static uint32_t diting_sysctl_table_socketbehavior_switch;
 
-static ctl_table diting_sysctl_register_subtable_proc[] =
+
+static ctl_table diting_sysctl_register_subtable[] =
 {
 	{
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
 #endif
-		.procname	= "reload",
+		.procname	= "procrun_reload",
 		.data		= &(diting_sysctl_table_procbehavior_reload),
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
@@ -49,22 +50,17 @@ static ctl_table diting_sysctl_register_subtable_proc[] =
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
 #endif
-		.procname	= "switch",
+		.procname	= "procrun_switch",
 		.data		= &(diting_sysctl_table_procbehavior_switch), 
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
-	{0}
-};
-
-static ctl_table diting_sysctl_register_subtable_access[] =
-{
 	{
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
 #endif
-		.procname	= "reload",
+		.procname	= "access_reload",
 		.data		= &(diting_sysctl_table_accessbehavior_reload),
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
@@ -74,22 +70,17 @@ static ctl_table diting_sysctl_register_subtable_access[] =
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
 #endif
-		.procname	= "switch",
+		.procname	= "access_switch",
 		.data		= &(diting_sysctl_table_accessbehavior_switch), 
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
-	{0}
-};
-
-static ctl_table diting_sysctl_register_subtable_killer[] =
-{
 	{
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
 #endif
-		.procname	= "reload",
+		.procname	= "killer_reload",
 		.data		= &(diting_sysctl_table_killerbehavior_reload),
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
@@ -99,23 +90,18 @@ static ctl_table diting_sysctl_register_subtable_killer[] =
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
 #endif
-		.procname	= "switch",
+		.procname	= "killer_switch",
 		.data		= &(diting_sysctl_table_killerbehavior_switch), 
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
-	{0}
-};
-
-static ctl_table diting_sysctl_register_subtable_network[] =
-{
 	{
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
 #endif
-		.procname	= "reload",
-		.data		= &(diting_sysctl_table_networkbehavior_reload),
+		.procname	= "socket_reload",
+		.data		= &(diting_sysctl_table_socketbehavior_reload),
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
@@ -124,49 +110,11 @@ static ctl_table diting_sysctl_register_subtable_network[] =
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 		.ctl_name	= CTL_UNNUMBERED,
 #endif
-		.procname	= "switch",
-		.data		= &(diting_sysctl_table_networkbehavior_switch), 
+		.procname	= "socket_switch",
+		.data		= &(diting_sysctl_table_socketbehavior_switch), 
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
-	},
-	{0}
-};
-
-
-static ctl_table diting_sysctl_register_subtable[] =
-{
-	{
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-		.ctl_name	= CTL_UNNUMBERED,
-#endif
-		.procname	= "proc_behavior",
-		.mode		= 0500,
-		.child		= diting_sysctl_register_subtable_proc,
-	},
-	{
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-		.ctl_name	= CTL_UNNUMBERED,
-#endif
-		.procname	= "access_behavior",
-		.mode		= 0500,
-		.child		= diting_sysctl_register_subtable_access,
-	},
-	{
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-		.ctl_name	= CTL_UNNUMBERED,
-#endif
-		.procname	= "killer_behavior",
-		.mode		= 0500,
-		.child		= diting_sysctl_register_subtable_killer,
-	},
-	{
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-		.ctl_name	= CTL_UNNUMBERED,
-#endif
-		.procname	= "network_behavior",
-		.mode		= 0500,
-		.child		= diting_sysctl_register_subtable_network,
 	},
 	{0}
 };
@@ -175,9 +123,9 @@ static ctl_table diting_sysctl_register_table[] =
 {
 	{
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-		.ctl_name	= CTL_UNNUMBERED,
+		.ctl_name	= CTL_KERN,
 #endif
-		.procname	= "diting",
+		.procname	= "kernel",
 		.mode		= 0500,
 		.child		= diting_sysctl_register_subtable,
 	},
@@ -201,8 +149,8 @@ int diting_sysctl_module_init(void)
 	diting_sysctl_table_accessbehavior_switch = 0;
 	diting_sysctl_table_killerbehavior_reload = 0;
 	diting_sysctl_table_killerbehavior_switch = 0;
-	diting_sysctl_table_networkbehavior_reload = 0;
-	diting_sysctl_table_networkbehavior_switch = 0;
+	diting_sysctl_table_socketbehavior_reload = 0;
+	diting_sysctl_table_socketbehavior_switch = 0;
 
 
 	return 0;
@@ -260,14 +208,14 @@ diting_sysctl_module_chkstatus(sysctl_type_t type, uint32_t *old)
 		}
 		break;
 	case DITING_SOCKETBEHAVIOR_RELOAD:
-		if(diting_sysctl_table_networkbehavior_reload){
-			diting_sysctl_table_networkbehavior_reload = 0;	
+		if(diting_sysctl_table_socketbehavior_reload){
+			diting_sysctl_table_socketbehavior_reload = 0;	
 			ret = 0;
 		}
 		break;
 	case DITING_SOCKETBEHAVIOR_SWITCH:
-		if(*old != diting_sysctl_table_networkbehavior_switch){
-			*old = diting_sysctl_table_networkbehavior_switch;
+		if(*old != diting_sysctl_table_socketbehavior_switch){
+			*old = diting_sysctl_table_socketbehavior_switch;
 			ret = 0;
 		}
 		break;

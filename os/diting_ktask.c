@@ -91,6 +91,7 @@ diting_ktask_module_init(void)
 
 	/*sockmsg channel init*/
 	diting_sockmsg_module.init();
+	diting_sysctl_module.init();
 
 	return 0;
 }
@@ -134,6 +135,7 @@ static int diting_ktask_module_destroy(void)
 
 	/*release sockmsg channel*/
 	diting_sockmsg_module.destroy();
+	diting_sysctl_module.destroy();
 
 	return 0;
 }

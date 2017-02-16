@@ -63,6 +63,8 @@ struct diting_procaccess_msgnode{
 
 struct diting_killer_msgnode{
 	diting_msgtype_t type;
+	uid_t uid;
+	char username[64];
 	char signal[32];
 	char proc1[1024];
 	char proc2[1024];
