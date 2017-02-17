@@ -11,6 +11,7 @@
 #include "diting_door.h"
 #include "diting_nolockqueue.h"
 #include "diting_ktask.h"
+#include "diting_config.h"
 
 static diting_nolockqueue_t *diting_security_queue = NULL;
 static struct security_operations *diting_security_ops = NULL;
@@ -148,6 +149,10 @@ static int __init diting_init(void)
 		goto out;
 	}
 
+	diting_config_module.init();
+	diting_config_module.load();
+	diting_config_module.sync();
+
 	diting_ktask_module.init();	
 	diting_ktask_module.create();
 	diting_ktask_module.run();
@@ -172,6 +177,8 @@ static void __exit diting_exit(void)
 
 	if(diting_security_queue)
 		diting_nolockqueue_module.destroy(diting_security_queue);
+
+	diting_config_module.destroy();
 }
 
 module_init(diting_init);

@@ -21,7 +21,7 @@
 #include "diting_util.h"
 #include "diting_nolockqueue.h"
 
-#include "diting_procfile.h"
+#include "diting_config.h"
 #include "diting_sysctl.h"
 
 static char *diting_bprm_inside_get_name(struct linux_binprm *bprm, char *kbuf)
@@ -85,7 +85,7 @@ int diting_inside_bprm_check_security(struct linux_binprm *bprm)
 	if(!realpath || IS_ERR(realpath))
 		return 0;
 
-	if(!diting_procfile_module.search(realpath))
+	if(!diting_config_module.search(DITING_PROCRUN, realpath))
 		goto out;
 
 	if(diting_common_getuser(current, username))

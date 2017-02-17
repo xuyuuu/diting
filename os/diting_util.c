@@ -197,6 +197,11 @@ char * diting_common_get_name(struct task_struct *task, char ** name, struct den
 {
 	char *p = NULL, *path = NULL;
 
+	if(!task || IS_ERR(task)){
+		path = NULL;	
+		return NULL;
+	}
+
 	path = kmalloc(PAGE_SIZE, GFP_KERNEL);
 	if (!path || IS_ERR(path)){
 		path = NULL;
@@ -273,7 +278,7 @@ int diting_common_getuser(struct task_struct *p, char *username)
 {
 	int res = 0, ret = -1, i, j = 0;
 	unsigned int len;
-	char *parameters;
+	char *parameters, *puser = NULL, tmpuser[64] = {0};
 	struct mm_struct *mm;
 
 	parameters = kmalloc(PAGE_SIZE, GFP_KERNEL);
@@ -299,11 +304,18 @@ int diting_common_getuser(struct task_struct *p, char *username)
 
 				i += 6;
 				while((i < len) && ('\0' != parameters[i]))
-					username[j++] = parameters[i++];
+					tmpuser[j++] = parameters[i++];
 				ret = 0;
 				break;
 			}
 		}
+	}
+	if(!ret){
+		puser = strrchr(tmpuser, '/');
+		if(puser)
+			strncpy(username, puser + 1, sizeof(username) - 1);
+		else
+			strncpy(username, tmpuser, sizeof(username) - 1);
 	}
 
 out_mm:

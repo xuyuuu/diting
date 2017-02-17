@@ -41,7 +41,6 @@ again:
         if (!NLMSG_OK(nlh, skb->len))
                 goto out;
 
-printk("=============pid: %d  type: %d=======\n", NETLINK_CREDS(skb)->pid, nlh->nlmsg_type);
 	if(DITING_SOCKMSG_SYN == nlh->nlmsg_type){
 		diting_userspace_pid = NETLINK_CREDS(skb)->pid;
 	}

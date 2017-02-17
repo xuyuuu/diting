@@ -38,7 +38,7 @@
 #include "diting_nolockqueue.h"
 
 #include "diting_sysctl.h"
-#include "diting_accessfile.h"
+#include "diting_config.h"
 
 int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dentry, 
 		struct dentry *old_dentry, int mode, int type, const char *arg)
@@ -62,7 +62,7 @@ int diting_dentry_has_permission(struct task_struct*task,struct dentry *new_dent
 	if(!strncasecmp(new_fullpath, "/var/log/diting", sizeof("/var/log/diting") - 1))
 		goto out;
 
-	if(diting_accessfile_module.search(new_fullpath))
+	if(diting_config_module.search(DITING_PROCACCESS, new_fullpath))
 		goto out;
 
 	if(arg){

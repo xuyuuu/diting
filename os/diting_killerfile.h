@@ -16,8 +16,7 @@ struct diting_killerfile_module
 	int (* unload)(void);
 	int (* sync)(void);
 	int (* reload)(void);
-	int (* search)(char *dirname);
-	int (* match)(char *dirname);
+	int (* search)(char *pattern);
 	int (* destroy)(void);
 };
 

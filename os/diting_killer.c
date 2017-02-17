@@ -18,7 +18,7 @@
 #include "diting_util.h"
 #include "diting_nolockqueue.h"
 
-#include "diting_killerfile.h"
+#include "diting_config.h"
 #include "diting_sysctl.h"
 
 static struct diting_killer_table_s{
@@ -32,7 +32,6 @@ static struct diting_killer_table_s{
 	{SIGILL, "SIGILL"},
 	{SIGTRAP, "SIGTRAP"},
 	{SIGABRT, "SIGABRT"},
-	{SIGIOT, "SIGIOT"},
 	{SIGBUS, "SIGBUS"},
 	{SIGFPE, "SIGFPE"},
 	{SIGKILL, "SIGKILL"},
@@ -41,6 +40,7 @@ static struct diting_killer_table_s{
 	{SIGUSR2, "SIGUSR2"},
 	{SIGPIPE, "SIGPIPE"},
 	{SIGALRM, "SIGALRM"},
+	{SIGTERM, "SIGTERM"},
 	{SIGSTKFLT, "SIGSTKFLT"},
 	{SIGCHLD, "SIGCHLD"},
 	{SIGCONT, "SIGCONT"},
@@ -79,7 +79,7 @@ int diting_module_inside_task_kill(struct task_struct *p, struct siginfo *info, 
 	if(!status)
 		goto out;
 
-	if(diting_killerfile_module.search(psig))
+	if(diting_config_module.search(DITING_KILLER, psig))
 		goto out;
 
 	srcpath = diting_common_get_name(srcp, &srcname, NULL, DITING_FULLFILE_TASK_TYPE);
