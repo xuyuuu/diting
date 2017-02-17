@@ -142,6 +142,7 @@ receive:
 
 	struct diting_procrun_msgnode *procrun_item = NULL;
 	struct diting_procaccess_msgnode *procaccess_item = NULL;
+	struct diting_killer_msgnode *killer_item = NULL;
 
 	switch(nlh->nlmsg_type){
 	case DITING_PROCRUN:
@@ -182,6 +183,9 @@ receive:
 		diting_logdump_module.push("%d,%s", procaccess_item->type, buffer);
 		break;
 	case DITING_KILLER:
+		killer_item = NLMSG_DATA(nlh);
+		diting_logdump_module.push("%d,[uid:%d],[user:%s],[action: '%s' Send Signal '%s' To '%s']", killer_item->type, killer_item->uid,
+				killer_item->username, killer_item->proc1, killer_item->signal, killer_item->proc2);
 		break;
 	}
 
