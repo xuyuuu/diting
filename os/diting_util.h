@@ -27,6 +27,15 @@ typedef enum DITING_MSGTYPE{
 	DITING_SOCKET,
 }diting_msgtype_t;
 
+typedef enum DITING_SOCKET_OPTYPE{
+	DITING_SOCKET_CREATE = 0,
+	DITING_SOCKET_LISTEN,
+	DITING_SOCKET_ACCEPT,
+	DITING_SOCKET_CONNECT,
+	DITING_SOCKET_RECVMSG,
+	DITING_SOCKET_SENDMSG
+}diting_socket_optype;
+
 typedef enum DITING_PROCACCESS_OPTYPE{
 	DITING_PROCACCESS_INODE_CREATE = 0,
 	DITING_PROCACCESS_INODE_UNLINK,
@@ -68,6 +77,20 @@ struct diting_killer_msgnode{
 	char signal[32];
 	char proc1[1024];
 	char proc2[1024];
+}__attribute__((packed));
+
+
+struct diting_socket_msgnode{
+	diting_msgtype_t type;
+	int actype;
+	uid_t uid;
+	char username[64];
+	char sockfamily[16];
+	char socktype[16];
+	uint32_t localaddr;
+	uint16_t localport;
+	uint32_t remoteaddr;
+	uint16_t remoteport;
 }__attribute__((packed));
 
 #ifndef __USERSPACE__

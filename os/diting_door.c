@@ -22,8 +22,12 @@
 #include "diting_bprm.h"
 #include "diting_killer.h"
 #include "diting_access.h"
+#include "diting_socket.h"
 
 /* old hook function point */
+static int (*old_socket_create) (int family, int type, int protocol, int kern);
+static int (*old_socket_listen)(struct socket *sock, int backlog);
+
 static int (* old_bprm_check_security)(struct linux_binprm *bprm);
 static int ( *old_file_permission)(struct file *file, int mask);
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 18)
@@ -200,6 +204,8 @@ static int diting_door_module_interfaceset(struct security_operations *security_
 	old_inode_mkdir		= security_point->inode_mkdir;
 	old_inode_rmdir		= security_point->inode_rmdir;
 	old_task_kill		= security_point->task_kill;
+	old_socket_create	= security_point->socket_create;
+	old_socket_listen	= security_point->socket_listen;
 
 	security_point->bprm_check_security = diting_module_inside_bprm_check_security;
 	security_point->file_permission	    = diting_module_inside_file_permission;
@@ -212,6 +218,8 @@ static int diting_door_module_interfaceset(struct security_operations *security_
 	security_point->inode_mkdir	    = diting_module_inside_inode_mkdir;
 	security_point->inode_rmdir	    = diting_module_inside_inode_rmdir;
 	security_point->task_kill	    = diting_module_inside_task_kill;
+	security_point->socket_create	    = diting_module_inside_socket_create;
+	security_point->socket_listen	    = diting_module_inside_socket_listen;
 
 	return 0;
 }
@@ -229,6 +237,8 @@ static int diting_door_module_interfacereset(struct security_operations *securit
 	security_point->inode_mkdir	    = old_inode_mkdir;
 	security_point->inode_rmdir	    = old_inode_rmdir;
 	security_point->task_kill	    = old_task_kill;
+	security_point->socket_create	    = old_socket_create;
+	security_point->socket_listen	    = old_socket_listen;
 
 	return 0;
 }
