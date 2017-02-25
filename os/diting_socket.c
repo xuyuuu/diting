@@ -58,7 +58,8 @@ int diting_module_inside_socket_create(int family, int type, int protocol, int k
 	strncpy(item->sockfamily, diting_socket_family[family], strlen(diting_socket_family[family]));
 	strncpy(item->socktype, diting_socket_type[type], strlen(diting_socket_type[type]));
 
-	diting_nolockqueue_module.enqueue(ng_nolockqueue_module.getque(), item);		
+	//diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);		
+	kfree(item);
 out:
 	return 0;
 }
@@ -88,10 +89,9 @@ int diting_module_inside_socket_listen(struct socket *sock, int backlog)
 	type = sock->type;
 	strncpy(item->sockfamily, diting_socket_family[family], strlen(diting_socket_family[family]));
 	strncpy(item->socktype, diting_socket_type[type], strlen(diting_socket_type[type]));
-	item->localport = 
-	if(sock->ops->)
 
-	diting_nolockqueue_module.enqueue(ng_nolockqueue_module.getque(), item);		
+	//diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
+	kfree(item);
 out:
 	return 0;
 }

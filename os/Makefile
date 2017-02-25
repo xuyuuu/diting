@@ -4,7 +4,7 @@ diting-objs := diting_start.o diting_nolockqueue.o\
 	diting_door.o diting_access.o diting_sysctl.o\
 	diting_sockmsg.o diting_procfile.o diting_accessfile.o\
 	diting_killerfile.o diting_sockfile.o diting_killer.o\
-	diting_config.o diting_socket.o
+	diting_config.o diting_socket.o diting_euidfk.o\
 
 
 

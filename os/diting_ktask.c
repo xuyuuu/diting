@@ -27,6 +27,7 @@ static int diting_ktask_loop_chkqueue(void *arg)
 		struct diting_procrun_msgnode *procrun_item = NULL;
 		struct diting_procaccess_msgnode *procaccess_item = NULL;
 		struct diting_killer_msgnode *killer_item = NULL;
+		struct diting_chroot_msgnode *chroot_item = NULL;
 
 		diting_nolockqueue_module.dequeue(diting_nolockqueue_module.getque(), (void **)&item);
 		if(!item || IS_ERR(item)){
@@ -46,6 +47,10 @@ static int diting_ktask_loop_chkqueue(void *arg)
 			case DITING_KILLER:
 				killer_item = (struct diting_killer_msgnode *)item;
 				diting_sockmsg_module.sendlog(killer_item, sizeof(struct diting_killer_msgnode), DITING_KILLER);
+				break;
+			case DITING_CHROOT:
+				chroot_item = (struct diting_chroot_msgnode *)item;
+				diting_sockmsg_module.sendlog(chroot_item, sizeof(struct diting_chroot_msgnode), DITING_CHROOT);
 				break;
 			default:
 				break;
@@ -129,6 +134,8 @@ static int diting_ktask_module_destroy(void)
 	diting_ktask_run_t = 0;
 	if(!IS_ERR(lo[0].lo_thread))
 		kthread_stop(lo[0].lo_thread);
+	if(!IS_ERR(lo[1].lo_thread))
+		kthread_stop(lo[1].lo_thread);
 
 	/*release sockmsg channel*/
 	diting_sockmsg_module.destroy();

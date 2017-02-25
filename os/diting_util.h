@@ -25,6 +25,7 @@ typedef enum DITING_MSGTYPE{
 	DITING_PROCACCESS,
 	DITING_KILLER,
 	DITING_SOCKET,
+	DITING_CHROOT,
 }diting_msgtype_t;
 
 typedef enum DITING_SOCKET_OPTYPE{
@@ -93,11 +94,20 @@ struct diting_socket_msgnode{
 	uint16_t remoteport;
 }__attribute__((packed));
 
+
+struct diting_chroot_msgnode{
+	diting_msgtype_t type;
+	uid_t uid;
+	char username[64];
+	char proc[1024];
+}__attribute__((packed));
+
 #ifndef __USERSPACE__
 extern char *diting_common_filp_fgets(char *str, int size, struct file *filp); 
 extern char * diting_common_get_name(struct task_struct *task, 
 		char** name, struct dentry *dentry, int type);
 extern int diting_common_getuser(struct task_struct *p, char *username);
+extern unsigned long diting_find_symbol_addr(const char *);
 #endif
 
 #endif
