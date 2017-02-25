@@ -13,6 +13,7 @@
 #include <linux/stat.h>
 #include <linux/version.h>
 #include <net/sock.h>
+#include <net/inet_sock.h>
 
 #include "diting_util.h"
 #include "diting_nolockqueue.h"
@@ -38,7 +39,7 @@ static char *diting_socket_type[] = {
 
 int diting_module_inside_socket_create(int family, int type, int protocol, int kern)
 {
-	char username[64] = {0};
+	char username[64] = {0}, *path = NULL, *name = NULL;
 	struct diting_socket_msgnode *item;
 	item = (struct diting_socket_msgnode *)kmalloc(\
 			sizeof(struct diting_socket_msgnode), GFP_KERNEL);
@@ -55,10 +56,18 @@ int diting_module_inside_socket_create(int family, int type, int protocol, int k
 	item->actype = DITING_SOCKET_CREATE;
 	if((family > DITING_SOCKET_FAMILY_MAX) || (type > DITING_SOCKET_TYPE_MAX))
 		goto out;
+	path = diting_common_get_name(current, &name, NULL, DITING_FULLFILE_TASK_TYPE);
+	if(!path || IS_ERR(path))
+		goto out;
+	else{
+		strncpy(item->proc, path, strlen(path));	
+		kfree(name);
+	}
+
 	strncpy(item->sockfamily, diting_socket_family[family], strlen(diting_socket_family[family]));
 	strncpy(item->socktype, diting_socket_type[type], strlen(diting_socket_type[type]));
 
-	//diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);		
+	diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
 	kfree(item);
 out:
 	return 0;
@@ -67,9 +76,21 @@ out:
 
 int diting_module_inside_socket_listen(struct socket *sock, int backlog)
 {
+	struct sock *sk = NULL;
+	struct inet_sock *inet = NULL;
 	int family, type;
-	char username[64] = {0};
+	char username[64] = {0}, *path = NULL, *name = NULL;
 	struct diting_socket_msgnode *item;
+
+	if(!sock || IS_ERR(sock))
+		goto out;
+	sk = sock->sk;
+	if(!sk || IS_ERR(sk))
+		goto out;
+	inet = (struct inet_sock *)sk;
+	if(!inet || IS_ERR(inet))
+		goto out;
+
 	item = (struct diting_socket_msgnode *)kmalloc(\
 			sizeof(struct diting_socket_msgnode), GFP_KERNEL);
 	memset(item, 0x0, sizeof(struct diting_socket_msgnode));
@@ -83,15 +104,26 @@ int diting_module_inside_socket_listen(struct socket *sock, int backlog)
 	strncpy(item->username, username, strlen(username));
 	item->type = DITING_SOCKET;
 	item->actype = DITING_SOCKET_LISTEN;
-	if(!sock->ops || IS_ERR(sock->ops) || (family > DITING_SOCKET_FAMILY_MAX) || (type > DITING_SOCKET_TYPE_MAX))
+	if(!sock->ops || IS_ERR(sock->ops))
 		goto out;
 	family = sock->ops->family;
 	type = sock->type;
+
+	if((family > DITING_SOCKET_FAMILY_MAX) || (type > DITING_SOCKET_TYPE_MAX))
+		goto out;
 	strncpy(item->sockfamily, diting_socket_family[family], strlen(diting_socket_family[family]));
 	strncpy(item->socktype, diting_socket_type[type], strlen(diting_socket_type[type]));
+	path = diting_common_get_name(current, &name, NULL, DITING_FULLFILE_TASK_TYPE);
+	if(!path || IS_ERR(path))
+		goto out;
+	else{
+		strncpy(item->proc, path, strlen(path));	
+		kfree(name);
+	}
+	item->localport = inet->num;
+	item->localaddr = inet->saddr;
 
-	//diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
-	kfree(item);
+	diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
 out:
 	return 0;
 }

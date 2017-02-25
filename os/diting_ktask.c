@@ -28,6 +28,7 @@ static int diting_ktask_loop_chkqueue(void *arg)
 		struct diting_procaccess_msgnode *procaccess_item = NULL;
 		struct diting_killer_msgnode *killer_item = NULL;
 		struct diting_chroot_msgnode *chroot_item = NULL;
+		struct diting_socket_msgnode *socket_item = NULL;
 
 		diting_nolockqueue_module.dequeue(diting_nolockqueue_module.getque(), (void **)&item);
 		if(!item || IS_ERR(item)){
@@ -51,6 +52,10 @@ static int diting_ktask_loop_chkqueue(void *arg)
 			case DITING_CHROOT:
 				chroot_item = (struct diting_chroot_msgnode *)item;
 				diting_sockmsg_module.sendlog(chroot_item, sizeof(struct diting_chroot_msgnode), DITING_CHROOT);
+				break;
+			case DITING_SOCKET:
+				socket_item = (struct diting_socket_msgnode *)item;
+				diting_sockmsg_module.sendlog(socket_item, sizeof(struct diting_socket_msgnode));
 				break;
 			default:
 				break;

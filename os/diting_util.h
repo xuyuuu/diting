@@ -88,6 +88,7 @@ struct diting_socket_msgnode{
 	char username[64];
 	char sockfamily[16];
 	char socktype[16];
+	char proc[1024];
 	uint32_t localaddr;
 	uint16_t localport;
 	uint32_t remoteaddr;
