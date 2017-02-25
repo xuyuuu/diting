@@ -22,6 +22,7 @@
 #include "diting_euidfk.h"
 #include "diting_util.h"
 #include "diting_nolockqueue.h"
+#include "diting_sysctl.h"
 
 static unsigned long diting_euidfk_do_fork;
 static unsigned long diting_euidfk_do_exit;
@@ -43,6 +44,7 @@ static struct task_struct * diting_euidfk_inside_copy_process(unsigned long clon
 					struct pid *pid,
 					int trace)
 {
+	uint32_t status = 0;
 	struct file *dt_file = NULL;
 	struct mm_struct *dt_mm = NULL;
 	struct dentry *dt_dentry = NULL;
@@ -51,6 +53,10 @@ static struct task_struct * diting_euidfk_inside_copy_process(unsigned long clon
 	char username[64] = {0}, *path = NULL, *name = NULL;
 
 	struct diting_chroot_msgnode *item = NULL;
+
+	diting_sysctl_module.chkstatus(DITING_CHROOTBEHAVIOR_SWITCH, &status);
+	if(!status)
+		goto out;
 
 	dt_mm = current->mm;
 	if(!dt_mm || IS_ERR(dt_mm))

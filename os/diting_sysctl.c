@@ -32,6 +32,7 @@ static uint32_t diting_sysctl_table_killerbehavior_reload;
 static uint32_t diting_sysctl_table_killerbehavior_switch;
 static uint32_t diting_sysctl_table_socketbehavior_reload;
 static uint32_t diting_sysctl_table_socketbehavior_switch;
+static uint32_t diting_sysctl_table_chrootbehavior_switch;
 
 
 static ctl_table diting_sysctl_register_subtable[] =
@@ -116,6 +117,16 @@ static ctl_table diting_sysctl_register_subtable[] =
 		.mode		= 0644,
 		.proc_handler	= &proc_dointvec,
 	},
+	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+		.ctl_name	= CTL_UNNUMBERED,
+#endif
+		.procname	= "chroot_switch",
+		.data		= &(diting_sysctl_table_chrootbehavior_switch), 
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= &proc_dointvec,
+	},
 	{0}
 };
 
@@ -151,6 +162,7 @@ int diting_sysctl_module_init(void)
 	diting_sysctl_table_killerbehavior_switch = 0;
 	diting_sysctl_table_socketbehavior_reload = 0;
 	diting_sysctl_table_socketbehavior_switch = 0;
+	diting_sysctl_table_chrootbehavior_switch = 0;
 
 
 	return 0;
@@ -216,6 +228,12 @@ diting_sysctl_module_chkstatus(sysctl_type_t type, uint32_t *old)
 	case DITING_SOCKETBEHAVIOR_SWITCH:
 		if(*old != diting_sysctl_table_socketbehavior_switch){
 			*old = diting_sysctl_table_socketbehavior_switch;
+			ret = 0;
+		}
+		break;
+	case DITING_CHROOTBEHAVIOR_SWITCH:
+		if(*old != diting_sysctl_table_chrootbehavior_switch){
+			*old = diting_sysctl_table_chrootbehavior_switch;	
 			ret = 0;
 		}
 		break;
