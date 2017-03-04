@@ -5,6 +5,7 @@
 #define DITING_LOGDUMP_ACCESS "/var/log/diting/access"
 #define DITING_LOGDUMP_KILLER	"/var/log/diting/killer"
 #define DITING_LOGDUMP_SOCKET	"/var/log/diting/socket"
+#define DITING_LOGDUMP_CHROOT	"/var/log/diting/chroot"
 
 #define DITING_LOGDUMP_PATTERN	"diting"
 

@@ -32,7 +32,8 @@ static char *diting_logpath[] = {
 	"/var/log/diting/proc",
 	"/var/log/diting/access",
 	"/var/log/diting/killer",
-	"/var/log/diting/socket"
+	"/var/log/diting/socket",
+	"/var/log/diting/chroot",
 };
 
 
@@ -61,6 +62,10 @@ static int diting_logdump_module_inside_inside_dump(char *errmsg)
 		file = DITING_LOGDUMP_ACCESS"/"DITING_LOGDUMP_PATTERN".log";
 	else if(DITING_KILLER == type)
 		file = DITING_LOGDUMP_KILLER"/"DITING_LOGDUMP_PATTERN".log";
+	else if(DITING_CHROOT == type)
+		file = DITING_LOGDUMP_CHROOT"/"DITING_LOGDUMP_PATTERN".log";
+	else if(DITING_SOCKET == type)
+		file = DITING_LOGDUMP_SOCKET"/"DITING_LOGDUMP_PATTERN".log";
 	else
 		goto out;
 		

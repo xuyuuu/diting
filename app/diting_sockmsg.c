@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/select.h>
+#include <arpa/inet.h>
 #include <linux/netlink.h>
 
 #include "diting_sockmsg.h"
@@ -99,7 +100,7 @@ int diting_sockmsg_module_inside_recvfromnlk(int fd)
 {
 	struct nlmsghdr *nlh = NULL;
 	int len , ret, flag, datalen;
-	char buffer[2048] = {0};
+	char buffer[2048] = {0}, saddr[16] = {0};
 
 	struct sockaddr_nl addr;
 	memset(&addr, 0x0, sizeof(addr));
@@ -143,6 +144,8 @@ receive:
 	struct diting_procrun_msgnode *procrun_item = NULL;
 	struct diting_procaccess_msgnode *procaccess_item = NULL;
 	struct diting_killer_msgnode *killer_item = NULL;
+	struct diting_chroot_msgnode *chroot_item = NULL;
+	struct diting_socket_msgnode *socket_item = NULL;
 
 	switch(nlh->nlmsg_type){
 	case DITING_PROCRUN:
@@ -186,6 +189,33 @@ receive:
 		killer_item = NLMSG_DATA(nlh);
 		diting_logdump_module.push("%d,[uid:%d],[user:%s],[action: '%s' Send Signal '%s' To '%s']", killer_item->type, killer_item->uid,
 				killer_item->username, killer_item->proc1, killer_item->signal, killer_item->proc2);
+		break;
+	case DITING_CHROOT:
+		chroot_item = NLMSG_DATA(nlh);
+		diting_logdump_module.push("%d, [uid:%d],[user:%s],[proc:%s]",
+				chroot_item->type, chroot_item->uid, chroot_item->username, chroot_item->proc);
+		break;
+	case DITING_SOCKET:
+		socket_item = NLMSG_DATA(nlh);
+		if(DITING_SOCKET_CREATE == socket_item->actype){
+			sprintf(buffer, "[uid:%d],[user:%s],[family:%s],[type:%s],[pid:%d],[proc:%s],[action: Socket Is Created !]",socket_item->uid, 
+				socket_item->username, socket_item->sockfamily, socket_item->socktype, socket_item->pid, socket_item->proc);
+			diting_logdump_module.push("%d, %s", socket_item->type, buffer);
+		}else if(DITING_SOCKET_LISTEN == socket_item->actype){
+			inet_ntop(AF_INET, &(socket_item->localaddr), saddr, sizeof(saddr) - 1);
+			sprintf(buffer, "[uid:%d],[user:%s],[family:%s],[type:%s],[pid:%d],[proc:%s],[%s:%d],[action: Program Is Listening !]",socket_item->uid, socket_item->username, socket_item->sockfamily, socket_item->socktype, socket_item->pid,socket_item->proc, saddr, socket_item->localport);	
+			diting_logdump_module.push("%d, %s", socket_item->type, buffer);
+		}else if(DITING_SOCKET_CONNECT == socket_item->actype){
+			inet_ntop(AF_INET, &(socket_item->remoteaddr), saddr, sizeof(saddr) - 1);
+			sprintf(buffer, "[uid:%d],[user:%s],[family:%s],[type:%s],[pid:%d],[proc:%s],[%s:%d],[action: Program Is Connecting !]",socket_item->uid, socket_item->username, socket_item->sockfamily, socket_item->socktype, socket_item->pid, socket_item->proc, saddr, socket_item->remoteport);
+			diting_logdump_module.push("%d, %s", socket_item->type, buffer);
+		}else if(DITING_SOCKET_RECVMSG == socket_item->actype){
+		
+		}else if(DITING_SOCKET_SENDMSG == socket_item->actype){
+		
+		}
+		break;
+	default:
 		break;
 	}
 
