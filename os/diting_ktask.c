@@ -55,7 +55,7 @@ static int diting_ktask_loop_chkqueue(void *arg)
 				break;
 			case DITING_SOCKET:
 				socket_item = (struct diting_socket_msgnode *)item;
-				diting_sockmsg_module.sendlog(socket_item, sizeof(struct diting_socket_msgnode));
+				diting_sockmsg_module.sendlog(socket_item, sizeof(struct diting_socket_msgnode), DITING_SOCKET);
 				break;
 			default:
 				break;

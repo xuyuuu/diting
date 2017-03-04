@@ -7,6 +7,7 @@
 #include <linux/fs_struct.h>
 #include <linux/sched.h>
 #include <linux/net.h>
+#include <linux/in.h>
 #include <asm/current.h>
 #include <asm/signal.h>
 #include <linux/dcache.h>
@@ -25,8 +26,11 @@
 #include "diting_socket.h"
 
 /* old hook function point */
-static int (*old_socket_create) (int family, int type, int protocol, int kern);
+static int (*old_socket_create)(int family, int type, int protocol, int kern);
 static int (*old_socket_listen)(struct socket *sock, int backlog);
+static int (*old_socket_connect)(struct socket *sock,struct sockaddr *address, int addrlen);
+static int (*old_socket_sendmsg)(struct socket *sock, struct msghdr *msg, int size);
+static int (*old_socket_recvmsg)(struct socket *sock, struct msghdr *msg, int size, int flags);
 
 static int (* old_bprm_check_security)(struct linux_binprm *bprm);
 static int ( *old_file_permission)(struct file *file, int mask);
@@ -206,6 +210,9 @@ static int diting_door_module_interfaceset(struct security_operations *security_
 	old_task_kill		= security_point->task_kill;
 	old_socket_create	= security_point->socket_create;
 	old_socket_listen	= security_point->socket_listen;
+	old_socket_connect	= security_point->socket_connect;
+	old_socket_sendmsg	= security_point->socket_sendmsg;
+	old_socket_recvmsg	= security_point->socket_recvmsg;
 
 	security_point->bprm_check_security = diting_module_inside_bprm_check_security;
 	security_point->file_permission	    = diting_module_inside_file_permission;
@@ -220,6 +227,9 @@ static int diting_door_module_interfaceset(struct security_operations *security_
 	security_point->task_kill	    = diting_module_inside_task_kill;
 	security_point->socket_create	    = diting_module_inside_socket_create;
 	security_point->socket_listen	    = diting_module_inside_socket_listen;
+	security_point->socket_connect	    = diting_module_inside_socket_connect;
+	security_point->socket_sendmsg	    = diting_module_inside_socket_sendmsg;
+	security_point->socket_recvmsg	    = diting_module_inside_socket_recvmsg;
 
 	return 0;
 }
@@ -239,6 +249,9 @@ static int diting_door_module_interfacereset(struct security_operations *securit
 	security_point->task_kill	    = old_task_kill;
 	security_point->socket_create	    = old_socket_create;
 	security_point->socket_listen	    = old_socket_listen;
+	security_point->socket_connect	    = old_socket_connect;
+	security_point->socket_sendmsg 	    = old_socket_sendmsg;
+	security_point->socket_recvmsg	    = old_socket_recvmsg;
 
 	return 0;
 }

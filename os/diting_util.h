@@ -31,7 +31,6 @@ typedef enum DITING_MSGTYPE{
 typedef enum DITING_SOCKET_OPTYPE{
 	DITING_SOCKET_CREATE = 0,
 	DITING_SOCKET_LISTEN,
-	DITING_SOCKET_ACCEPT,
 	DITING_SOCKET_CONNECT,
 	DITING_SOCKET_RECVMSG,
 	DITING_SOCKET_SENDMSG
@@ -85,6 +84,7 @@ struct diting_socket_msgnode{
 	diting_msgtype_t type;
 	int actype;
 	uid_t uid;
+	pid_t pid;
 	char username[64];
 	char sockfamily[16];
 	char socktype[16];

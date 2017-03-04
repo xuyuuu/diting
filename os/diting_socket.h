@@ -20,7 +20,9 @@ struct diting_socket_sockaddr_in
 extern int diting_module_inside_socket_create(int family, int type,
 		int protocol, int kern);
 extern int diting_module_inside_socket_listen(struct socket *sock, int backlog);
-
+extern int diting_module_inside_socket_connect(struct socket *sock, struct sockaddr *address, int addrlen);
+extern int diting_module_inside_socket_sendmsg(struct socket *sock, struct msghdr *msg, int size);
+extern int diting_module_inside_socket_recvmsg(struct socket *sock, struct msghdr *msg, int size, int flags);
 
 
 

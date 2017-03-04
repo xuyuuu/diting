@@ -12,11 +12,13 @@
 #include <linux/fs_struct.h>
 #include <linux/stat.h>
 #include <linux/version.h>
+#include <linux/in.h>
 #include <net/sock.h>
 #include <net/inet_sock.h>
 
 #include "diting_util.h"
 #include "diting_nolockqueue.h"
+#include "diting_socket.h"
 
 #define DITING_SOCKET_FAMILY_MAX		37
 static char *diting_socket_family[] = {
@@ -41,10 +43,13 @@ int diting_module_inside_socket_create(int family, int type, int protocol, int k
 {
 	char username[64] = {0}, *path = NULL, *name = NULL;
 	struct diting_socket_msgnode *item;
+
+	if((family > DITING_SOCKET_FAMILY_MAX) || (type > DITING_SOCKET_TYPE_MAX))
+		goto out;
+
 	item = (struct diting_socket_msgnode *)kmalloc(\
 			sizeof(struct diting_socket_msgnode), GFP_KERNEL);
 	memset(item, 0x0, sizeof(struct diting_socket_msgnode));
-
 	if(current->cred && !IS_ERR(current->cred))
 		item->uid  = current->cred->uid;
 	else
@@ -52,14 +57,11 @@ int diting_module_inside_socket_create(int family, int type, int protocol, int k
 	if(diting_common_getuser(current, username))
 		strncpy(username, "SYSTEM", sizeof("SYSTEM") - 1);
 	strncpy(item->username, username, strlen(username));
+	item->pid = current->pid;
 	item->type = DITING_SOCKET;
 	item->actype = DITING_SOCKET_CREATE;
-	if((family > DITING_SOCKET_FAMILY_MAX) || (type > DITING_SOCKET_TYPE_MAX))
-		goto out;
 	path = diting_common_get_name(current, &name, NULL, DITING_FULLFILE_TASK_TYPE);
-	if(!path || IS_ERR(path))
-		goto out;
-	else{
+	if(path && !IS_ERR(path)){
 		strncpy(item->proc, path, strlen(path));	
 		kfree(name);
 	}
@@ -68,7 +70,6 @@ int diting_module_inside_socket_create(int family, int type, int protocol, int k
 	strncpy(item->socktype, diting_socket_type[type], strlen(diting_socket_type[type]));
 
 	diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
-	kfree(item);
 out:
 	return 0;
 }
@@ -91,6 +92,15 @@ int diting_module_inside_socket_listen(struct socket *sock, int backlog)
 	if(!inet || IS_ERR(inet))
 		goto out;
 
+	if(!sock->ops || IS_ERR(sock->ops))
+		goto out;
+
+	family = sock->ops->family;
+	type = sock->type;
+
+	if((family > DITING_SOCKET_FAMILY_MAX) || (type > DITING_SOCKET_TYPE_MAX))
+		goto out;
+
 	item = (struct diting_socket_msgnode *)kmalloc(\
 			sizeof(struct diting_socket_msgnode), GFP_KERNEL);
 	memset(item, 0x0, sizeof(struct diting_socket_msgnode));
@@ -102,26 +112,19 @@ int diting_module_inside_socket_listen(struct socket *sock, int backlog)
 	if(diting_common_getuser(current, username))
 		strncpy(username, "SYSTEM", sizeof("SYSTEM") - 1);
 	strncpy(item->username, username, strlen(username));
+	item->pid = current->pid;
 	item->type = DITING_SOCKET;
 	item->actype = DITING_SOCKET_LISTEN;
-	if(!sock->ops || IS_ERR(sock->ops))
-		goto out;
-	family = sock->ops->family;
-	type = sock->type;
-
-	if((family > DITING_SOCKET_FAMILY_MAX) || (type > DITING_SOCKET_TYPE_MAX))
-		goto out;
 	strncpy(item->sockfamily, diting_socket_family[family], strlen(diting_socket_family[family]));
 	strncpy(item->socktype, diting_socket_type[type], strlen(diting_socket_type[type]));
+	item->localport = inet->num;
+	item->localaddr = inet->saddr;
+
 	path = diting_common_get_name(current, &name, NULL, DITING_FULLFILE_TASK_TYPE);
-	if(!path || IS_ERR(path))
-		goto out;
-	else{
+	if(path && !IS_ERR(path)){
 		strncpy(item->proc, path, strlen(path));	
 		kfree(name);
 	}
-	item->localport = inet->num;
-	item->localaddr = inet->saddr;
 
 	diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
 out:
@@ -129,3 +132,59 @@ out:
 }
 
 
+int diting_module_inside_socket_connect(struct socket *sock, struct sockaddr *address, int addrlen)
+{
+	struct sock *sk = NULL;
+	int family, type;
+	char username[64] = {0}, *path = NULL, *name = NULL;
+	struct diting_socket_msgnode *item;
+	struct sockaddr_in *sockaddr = NULL;
+
+	if(!sock || IS_ERR(sock))
+		goto out;
+	sk = sock->sk;
+	if(!sk || IS_ERR(sk))
+		goto out;
+
+	if(!sock->ops || IS_ERR(sock->ops))
+		goto out;
+
+	if(!address || IS_ERR(address))
+		goto out;
+	sockaddr = (struct sockaddr_in *)address;
+
+	family = sock->ops->family;
+	type = sock->type;
+
+	if((family > DITING_SOCKET_FAMILY_MAX) || (type > DITING_SOCKET_TYPE_MAX))
+		goto out;
+
+	item = (struct diting_socket_msgnode *)kmalloc(\
+			sizeof(struct diting_socket_msgnode), GFP_KERNEL);
+	memset(item, 0x0, sizeof(struct diting_socket_msgnode));
+
+	if(current->cred && !IS_ERR(current->cred))
+		item->uid  = current->cred->uid;
+	else
+		item->uid = -1;
+	if(diting_common_getuser(current, username))
+		strncpy(username, "SYSTEM", sizeof("SYSTEM") - 1);
+	strncpy(item->username, username, strlen(username));
+	item->pid = current->pid;
+	item->type = DITING_SOCKET;
+	item->actype = DITING_SOCKET_CONNECT;
+	strncpy(item->sockfamily, diting_socket_family[family], strlen(diting_socket_family[family]));
+	strncpy(item->socktype, diting_socket_type[type], strlen(diting_socket_type[type]));
+	item->remoteport = sockaddr->sin_port;
+	item->remoteaddr = sockaddr->sin_addr.s_addr;
+
+	path = diting_common_get_name(current, &name, NULL, DITING_FULLFILE_TASK_TYPE);
+	if(path && !IS_ERR(path)){
+		strncpy(item->proc, path, strlen(path));	
+		kfree(name);
+	}
+
+	diting_nolockqueue_module.enqueue(diting_nolockqueue_module.getque(), item);
+out:
+	return 0;
+}
