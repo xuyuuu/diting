@@ -100,7 +100,7 @@ int diting_sockmsg_module_inside_recvfromnlk(int fd)
 {
 	struct nlmsghdr *nlh = NULL;
 	int len , ret, flag, datalen;
-	char buffer[2048] = {0}, saddr[16] = {0};
+	char buffer[2048] = {0}, saddr[16] = {0}, daddr[16] = {0};
 
 	struct sockaddr_nl addr;
 	memset(&addr, 0x0, sizeof(addr));
@@ -202,17 +202,23 @@ receive:
 				socket_item->username, socket_item->sockfamily, socket_item->socktype, socket_item->pid, socket_item->proc);
 			diting_logdump_module.push("%d, %s", socket_item->type, buffer);
 		}else if(DITING_SOCKET_LISTEN == socket_item->actype){
-			inet_ntop(AF_INET, &(socket_item->localaddr), saddr, sizeof(saddr) - 1);
+			inet_ntop(AF_INET, &(socket_item->localaddr), saddr, sizeof(saddr));
 			sprintf(buffer, "[uid:%d],[user:%s],[family:%s],[type:%s],[pid:%d],[proc:%s],[%s:%d],[action: Program Is Listening !]",socket_item->uid, socket_item->username, socket_item->sockfamily, socket_item->socktype, socket_item->pid,socket_item->proc, saddr, socket_item->localport);	
 			diting_logdump_module.push("%d, %s", socket_item->type, buffer);
 		}else if(DITING_SOCKET_CONNECT == socket_item->actype){
-			inet_ntop(AF_INET, &(socket_item->remoteaddr), saddr, sizeof(saddr) - 1);
+			inet_ntop(AF_INET, &(socket_item->remoteaddr), saddr, sizeof(saddr));
 			sprintf(buffer, "[uid:%d],[user:%s],[family:%s],[type:%s],[pid:%d],[proc:%s],[%s:%d],[action: Program Is Connecting !]",socket_item->uid, socket_item->username, socket_item->sockfamily, socket_item->socktype, socket_item->pid, socket_item->proc, saddr, socket_item->remoteport);
 			diting_logdump_module.push("%d, %s", socket_item->type, buffer);
 		}else if(DITING_SOCKET_RECVMSG == socket_item->actype){
-		
+			inet_ntop(AF_INET, &(socket_item->localaddr), saddr, sizeof(saddr));
+			inet_ntop(AF_INET, &(socket_item->remoteaddr), daddr, sizeof(daddr));
+			sprintf(buffer, "[uid:%d],[user:%s],[family:%s],[type:%s],[pid:%d],[proc:%s],[action: %s:%d RecvMesg From %s:%d]",socket_item->uid, socket_item->username, socket_item->sockfamily, socket_item->socktype, socket_item->pid, socket_item->proc, saddr, socket_item->localport, daddr, socket_item->remoteport);
+			diting_logdump_module.push("%d, %s", socket_item->type, buffer);
 		}else if(DITING_SOCKET_SENDMSG == socket_item->actype){
-		
+			inet_ntop(AF_INET, &(socket_item->localaddr), saddr, sizeof(saddr));
+			inet_ntop(AF_INET, &(socket_item->remoteaddr), daddr, sizeof(daddr));
+			sprintf(buffer, "[uid:%d],[user:%s],[family:%s],[type:%s],[pid:%d],[proc:%s],[action: %s:%d SendMesg To %s:%d]",socket_item->uid, socket_item->username, socket_item->sockfamily, socket_item->socktype, socket_item->pid, socket_item->proc, saddr, socket_item->localport, daddr, socket_item->remoteport);
+			diting_logdump_module.push("%d, %s", socket_item->type, buffer);
 		}
 		break;
 	default:
